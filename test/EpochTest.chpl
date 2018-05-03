@@ -113,6 +113,37 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
+  proc testActivationForward() {
+    writeln("");
+    writeln("testActivationForward... starting...");
+    writeln("");
+
+    var X = Matrix( [100.0,0.0,10.0,0.0], [100.0,0.0,10.0,0.0], [100.0,0.0,10.0,0.0] );
+    var udim = 2,
+        ldim = X.shape[1],
+        activation = "relu";
+
+    var layer = new Layer(activation, udim, ldim);
+
+    var Z = layer.linearForward(X);
+    writeln("Affine Transformation: ");
+    writeln(Z);
+    writeln("Shapes: Z.shape = ",Z.shape,", W.shape = ",layer.W.shape,", X.shape = ",X.shape);
+
+    var A = layer.activationForward(Z);
+
+    writeln("");
+    writeln("This Layer's Activation: ");
+    writeln(A);
+
+    assertRealApproximates("In this test, A equals Z", expected=Z[1,1], actual=A[1,1]);
+
+    writeln("");
+    writeln("testActivationForward... done...");
+    writeln("");
+    writeln("");
+  }
+
   proc testNN() {
     var layerOneUnits = 5,
         inputDim = 8,
@@ -140,6 +171,7 @@ class EpochTest : UnitTest {
     testBreath();
     testHiddenLayer();
     testLinearForward();
+    testActivationForward();
   //  testNN();
     return 0;
   }

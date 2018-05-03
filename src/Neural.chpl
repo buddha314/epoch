@@ -9,6 +9,8 @@
   //     Model,
        Random;
 
+
+/*  A Layer of a Neural Network is defined by it's activation, weights, and bias  */
    class Layer {
      var wDom: domain(2),
          bDom: domain(1),
@@ -16,8 +18,9 @@
          b:[bDom] real,
          g: Activation;
 
-
-     proc init(activation: string, udim: int, ldim: int){
+/*  Constructs a layer with given activation and weights/bias initialized
+         with small random postive numbers                                */
+     proc init(activation: string, udim: int, ldim: int, eps = 0.1){
        this.wDom = {1..udim,1..ldim};
        this.bDom = this.wDom.dim(1);
        var W: [wDom] real;
@@ -26,8 +29,8 @@
        this.b = b;
        fillRandom(this.W);
        fillRandom(this.b);
-       this.W = 0.1*this.W;
-       this.b = 0.1*this.b;
+       this.W = eps*this.W;
+       this.b = eps*this.b;
        this.g = new Activation(name=activation);
      }
 /*
@@ -39,14 +42,22 @@
          <~> " a:" <~> this.a.shape;
 */
 
+
+/*  Computes an Affine Transformation on A_prev:  Z = W.A_prev + b  */
      proc linearForward(A_prev: []) {
        const zDom: domain(2) = {this.W.domain.dim(1),A_prev.domain.dim(2)};
-       var b: [zDom] real;
-       for i in zDom.dim(2) {
+       var b: [zDom] real;  // this step is essentially python's "broadcasting"
+       for i in zDom.dim(2) {  // this could be a `forall` i think
          b[..,i] = this.b;
        }
-       const Z = (this.W.dot(A_prev)).plus(b);
+       const Z = this.W.dot(A_prev).plus(b);
        return Z;
+     }
+
+/*  Compute the activation of the current layer  */
+     proc activationForward(Z: []) {
+       const A: [Z.domain] real = this.g.f(Z);
+       return A;
      }
 
    }
