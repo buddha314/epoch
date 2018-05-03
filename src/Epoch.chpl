@@ -1,0 +1,3 @@
+module Epoch {
+  use Neural;
+}
