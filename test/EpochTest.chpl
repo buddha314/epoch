@@ -90,6 +90,7 @@ class EpochTest : UnitTest {
 
   proc testLinearForward() {
     writeln("");
+    writeln("");
     writeln("testLinearForward... starting...");
     writeln("");
 
@@ -114,6 +115,7 @@ class EpochTest : UnitTest {
   }
 
   proc testActivationForward() {
+    writeln("");
     writeln("");
     writeln("testActivationForward... starting...");
     writeln("");
@@ -144,26 +146,54 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testNN() {
-    var layerOneUnits = 5,
-        inputDim = 8,
-        epochs=100000,
-        batchSize = 4,
-        model = new Sequential(),
-        lr: real = 0.00125;
+  proc testStackBuilder() {
+    writeln("");
+    writeln("");
+    writeln("testStackBuilder... starting...");
+    writeln("");
 
-    var X = Matrix( [0,0] ,[0,1] ,[1,0] ,[1,1], [1,0], [0,0] ,[0,1] ,[1,0] ,[1,1], [1,0] ),
-        y = Vector([0,1,1,0,1,0,1,1,0,1]);
+    var dims = [3,4,2,3,1],
+        activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
 
-    var testData = Matrix([0,1],[1,0],[1,1]);
-    //model.add(new Dense(units=layerOneUnits, inputDim=inputDim, batchSize=batchSize));
-    model.add(new Dense(units=2));
-    //model.add(new Dense(units=2));
-    model.add(new Activation(name="tanh"));
-    model.fit(xTrain=X, yTrain=y, epochs=epochs, batchSize=batchSize, lr=lr);
-    var predictions = model.forward_pass(testData);
-    writeln("Predictions: ",predictions);
-    assertIntEquals("NN correct number of layers", expected=4, actual=model.layers.size);
+    var model = new FCNetwork(dims, activations);
+
+    writeln("Number of Layers: ",model.layers.size);
+    writeln("Weights of 3rd Layer: \n",model.layers[3].W);
+    writeln("Shape of 3rd Weight Matrix: ",model.layers[3].W.shape);
+    writeln("Activation Type of 3rd Layer: ",model.layers[3].g.name);
+
+    assertIntEquals("Output Dimension of Layer 3 should be 3", expected=3, actual=model.layers[3].W.shape(1));
+
+    writeln("");
+    writeln("testStackBuilder... done...");
+    writeln("");
+    writeln("");
+  }
+
+  proc testForwardPass() {
+    writeln("");
+    writeln("");
+    writeln("testForwardPass... starting...");
+    writeln("");
+
+    var dims = [3,4,2,3,1],
+        activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
+
+    var X = Matrix( [100000.0,0.0,10.0,0.0], [10000.0,0.0,10.0,0.0], [1000.0,0.0,10.0,0.0] );
+
+    var model = new FCNetwork(dims, activations);
+
+    var output = model.forwardPass(X);
+
+    writeln("Output: ",output);
+
+    assertIntEquals("Single Node Output Expected", expected=1, actual=output.shape(1));
+
+
+    writeln("");
+    writeln("testForwardPass... done...");
+    writeln("");
+    writeln("");
   }
 
   proc run() {
@@ -172,7 +202,8 @@ class EpochTest : UnitTest {
     testHiddenLayer();
     testLinearForward();
     testActivationForward();
-  //  testNN();
+    testStackBuilder();
+    testForwardPass();
     return 0;
   }
 }
