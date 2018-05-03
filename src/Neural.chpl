@@ -19,7 +19,7 @@
 
      proc init(activation: string, udim: int, ldim: int){
        this.wDom = {1..udim,1..ldim};
-       this.bDom = {1..udim};
+       this.bDom = this.wDom.dim(1);
        var W: [wDom] real;
        var b: [bDom] real;
        this.W = W;
