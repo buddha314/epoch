@@ -90,6 +90,7 @@ class EpochTest : UnitTest {
 
   proc testLinearForward() {
     writeln("");
+    writeln("");
     writeln("testLinearForward... starting...");
     writeln("");
 
@@ -114,6 +115,7 @@ class EpochTest : UnitTest {
   }
 
   proc testActivationForward() {
+    writeln("");
     writeln("");
     writeln("testActivationForward... starting...");
     writeln("");
@@ -146,6 +148,7 @@ class EpochTest : UnitTest {
 
   proc testStackBuilder() {
     writeln("");
+    writeln("");
     writeln("testStackBuilder... starting...");
     writeln("");
 
@@ -154,15 +157,41 @@ class EpochTest : UnitTest {
 
     var model = new FCNetwork(dims, activations);
 
-    writeln(model.layers.size);
-    writeln(model.layers[3].W);
-    writeln(model.layers[3].W.shape);
-    writeln(model.layers[3].g.name);
+    writeln("Number of Layers: ",model.layers.size);
+    writeln("Weights of 3rd Layer: \n",model.layers[3].W);
+    writeln("Shape of 3rd Weight Matrix: ",model.layers[3].W.shape);
+    writeln("Activation Type of 3rd Layer: ",model.layers[3].g.name);
 
     assertIntEquals("Output Dimension of Layer 3 should be 3", expected=3, actual=model.layers[3].W.shape(1));
 
     writeln("");
     writeln("testStackBuilder... done...");
+    writeln("");
+    writeln("");
+  }
+
+  proc testForwardPass() {
+    writeln("");
+    writeln("");
+    writeln("testForwardPass... starting...");
+    writeln("");
+
+    var dims = [3,4,2,3,1],
+        activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
+
+    var X = Matrix( [100000.0,0.0,10.0,0.0], [10000.0,0.0,10.0,0.0], [1000.0,0.0,10.0,0.0] );
+
+    var model = new FCNetwork(dims, activations);
+
+    var output = model.forwardPass(X);
+
+    writeln("Output: ",output);
+
+    assertIntEquals("Single Node Output Expected", expected=1, actual=output.shape(1));
+
+
+    writeln("");
+    writeln("testForwardPass... done...");
     writeln("");
     writeln("");
   }
@@ -174,6 +203,7 @@ class EpochTest : UnitTest {
     testLinearForward();
     testActivationForward();
     testStackBuilder();
+    testForwardPass();
     return 0;
   }
 }

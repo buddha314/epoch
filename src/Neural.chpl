@@ -26,6 +26,19 @@
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
      }
+
+     proc forwardPass(X:[]) {
+       var Adom = X.domain;
+       var A: [Adom] real = X;
+       for l in this.layerDom {
+        // const A_prev = A;
+         const Z = this.layers[l].linearForward(A);
+         const A_current = this.layers[l].activationForward(Z);
+         Adom = A_current.domain;
+         A = A_current;
+       }
+       return A;
+     }
    }
 
 
