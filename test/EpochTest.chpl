@@ -144,26 +144,27 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testNN() {
-    var layerOneUnits = 5,
-        inputDim = 8,
-        epochs=100000,
-        batchSize = 4,
-        model = new Sequential(),
-        lr: real = 0.00125;
+  proc testStackBuilder() {
+    writeln("");
+    writeln("testStackBuilder... starting...");
+    writeln("");
 
-    var X = Matrix( [0,0] ,[0,1] ,[1,0] ,[1,1], [1,0], [0,0] ,[0,1] ,[1,0] ,[1,1], [1,0] ),
-        y = Vector([0,1,1,0,1,0,1,1,0,1]);
+    var dims = [3,4,2,3,1],
+        activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
 
-    var testData = Matrix([0,1],[1,0],[1,1]);
-    //model.add(new Dense(units=layerOneUnits, inputDim=inputDim, batchSize=batchSize));
-    model.add(new Dense(units=2));
-    //model.add(new Dense(units=2));
-    model.add(new Activation(name="tanh"));
-    model.fit(xTrain=X, yTrain=y, epochs=epochs, batchSize=batchSize, lr=lr);
-    var predictions = model.forward_pass(testData);
-    writeln("Predictions: ",predictions);
-    assertIntEquals("NN correct number of layers", expected=4, actual=model.layers.size);
+    var model = new FCNetwork(dims, activations);
+
+    writeln(model.layers.size);
+    writeln(model.layers[3].W);
+    writeln(model.layers[3].W.shape);
+    writeln(model.layers[3].g.name);
+
+    assertIntEquals("Output Dimension of Layer 3 should be 3", expected=3, actual=model.layers[3].W.shape(1));
+
+    writeln("");
+    writeln("testStackBuilder... done...");
+    writeln("");
+    writeln("");
   }
 
   proc run() {
@@ -172,7 +173,7 @@ class EpochTest : UnitTest {
     testHiddenLayer();
     testLinearForward();
     testActivationForward();
-  //  testNN();
+    testStackBuilder();
     return 0;
   }
 }

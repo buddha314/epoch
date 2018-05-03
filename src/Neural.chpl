@@ -10,6 +10,26 @@
        Random;
 
 
+/*  A Fully Connected (FC) Neural Network is a stack of Layers  */
+   class FCNetwork {
+     var layerDom = {1..0},
+         layers: [layerDom] Layer,
+         dims: [layerDom] int,
+         activations: [layerDom] string,
+         trained: bool = false;
+
+     proc init(dims: [] int, activations: [] string) {
+       this.layerDom = {1..dims.size - 1};
+       var layers: [layerDom] Layer;
+       this.layers = layers;
+       for l in layerDom {
+         this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
+       }
+     }
+   }
+
+
+
 /*  A Layer of a Neural Network is defined by it's activation, weights, and bias  */
    class Layer {
      var wDom: domain(2),
@@ -77,6 +97,8 @@
         return tanh(x);
        } else if this.name == "step" {
          return heaviside(x);
+       } else if this.name == "linear" {
+         return x;
        } else {
          return 0;
        }
@@ -90,7 +112,9 @@
        } else if this.name == "tanh" {
          return dtanh(x);
        } else if this.name == "step" {
-         return dsigmoid(x);  //maybe I'll make this dsigmoid(x) for fun?
+         return dheaviside(x);  //maybe I'll make this dsigmoid(x) for fun?
+       } else if this.name == "linear" {
+         return 1;
        } else {
          return 0;
        }
@@ -121,6 +145,10 @@
        }
      }
 
+     proc id(x) {
+       return x;
+     }
+
      // Derivates of Activation Functions
      proc dsigmoid(x) {
        return sigmoid(x) * (1 - sigmoid(x));
@@ -140,6 +168,10 @@
        } else {
          return 0;
        }
+     }
+
+     proc did(x) {
+       return 1;
      }
 
   }
