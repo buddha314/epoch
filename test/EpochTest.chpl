@@ -183,6 +183,9 @@ class EpochTest : UnitTest {
 
     var model = new FCNetwork(dims, activations);
 
+    model.trained = true;
+    if model.trained then writeln("Treating this as a Trained Model \n");
+
     var output = model.forwardPass(X);
 
     writeln("Output: ",output);
@@ -225,10 +228,10 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testBackprop() {
+  proc testCaches() {
     writeln("");
     writeln("");
-    writeln("testBackprop... starting...");
+    writeln("testCaches... starting...");
     writeln("");
 
     var dims = [2,2,1],
@@ -245,12 +248,24 @@ class EpochTest : UnitTest {
 
     var cost = computeCost(Y,AL);
     writeln("Cost: ",cost);
+    writeln("");
+    writeln("Caches:");
+    for l in model.layerDom {
+      writeln("Layer ",l," A_prev: \n",model.caches[l].A_prev);
+      writeln("");
+      writeln("Layer ",l," Z: \n",model.caches[l].Z);
+      writeln("");
+      writeln("");
+    }
+
+    assertIntEquals("Dim 1 of Second Cache's Z", expected=1, actual=model.caches[2].Z.shape(1));
 
     writeln("");
-    writeln("testBackprop... done...");
+    writeln("testCaches... done...");
     writeln("");
     writeln("");
   }
+
 
   proc run() {
     super.run();
@@ -261,6 +276,7 @@ class EpochTest : UnitTest {
     testStackBuilder();
     testForwardPass();
     testCostFunction();
+    testCaches();
     return 0;
   }
 }

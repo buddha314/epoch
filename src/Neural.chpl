@@ -14,6 +14,7 @@
    class FCNetwork {
      var layerDom = {1..0},
          layers: [layerDom] Layer,
+         caches: [layerDom] Cache, // Populated if `trained` = false
          dims: [layerDom] int,
          activations: [layerDom] string,
          trained: bool = false;
@@ -21,7 +22,9 @@
      proc init(dims: [] int, activations: [] string) {
        this.layerDom = {1..dims.size - 1};
        var layers: [layerDom] Layer;
+       var caches: [layerDom] Cache;
        this.layers = layers;
+       this.caches = caches;
        for l in layerDom {
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
@@ -35,6 +38,13 @@
         // const A_prev = A;
          const Z = this.layers[l].linearForward(A);
          const A_current = this.layers[l].activationForward(Z);
+         if ! this.trained {
+           this.caches[l] = new Cache();
+           this.caches[l].aDom = A.domain;
+           this.caches[l].A_prev = A;
+           this.caches[l].zDom = Z.domain;
+           this.caches[l].Z = Z;
+         }
          Adom = A_current.domain;
          A = A_current;
        }
@@ -42,7 +52,20 @@
      }
    }
 
+   class Cache {
+     var bDom: domain(1),
+         wDom: domain(2),
+         aDom: domain(2),
+         zDom: domain(2),
+         A_prev:[aDom] real,
+         Z:[zDom] real,
+         dW:[wDom] real,
+         db:[bDom] real,
+         dA_prev: [aDom] real,
+         dZ:[zDom] real;
 
+     proc init() { }
+   }
 
 /*  A Layer of a Neural Network is defined by it's activation, weights, and bias  */
    class Layer {
@@ -54,7 +77,7 @@
 
 /*  Constructs a layer with given activation and weights/bias initialized
          with small random postive numbers                                */
-     proc init(activation: string, udim: int, ldim: int, eps = 0.1){
+     proc init(activation: string, udim: int, ldim: int, eps = 0.1) {
        this.wDom = {1..udim,1..ldim};
        this.bDom = this.wDom.dim(1);
        var W: [wDom] real;
@@ -92,6 +115,10 @@
      proc activationForward(Z: []) {
        const A: [Z.domain] real = this.g.f(Z);
        return A;
+     }
+
+     proc activationBackward(dA:[],Z:[]) {
+
      }
 
    }
@@ -188,7 +215,6 @@
        return 1;
      }
   }
-
 
   proc computeCost(Y:[], AL:[]) {
     var Jp: [AL.domain] real = Y*log(AL) + (1-Y)*log(1-AL);
