@@ -27,6 +27,7 @@
        }
      }
 
+/*  Sends input data through a forwardPass of the Neural Network  */
      proc forwardPass(X:[]) {
        var Adom = X.domain;
        var A: [Adom] real = X;
@@ -186,17 +187,13 @@
      proc did(x) {
        return 1;
      }
-
   }
 
-  class Dense {
-    var units: int,
-        inputDim: int;
 
-    proc init(units:int, inputDim=0) {
-      this.units=units;
-      this.inputDim=inputDim;
-    }
+  proc computeCost(Y:[], AL:[]) {
+    var Jp: [AL.domain] real = Y*log(AL) + (1-Y)*log(1-AL);
+    var J: real = -(+ reduce Jp)/AL.domain.dim(2).size;
+    return J;
   }
 
   class Loss {

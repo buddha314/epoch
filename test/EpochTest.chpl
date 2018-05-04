@@ -196,6 +196,62 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
+  proc testCostFunction() {
+    writeln("");
+    writeln("");
+    writeln("testCostFunction... starting...");
+    writeln("");
+
+    var dims = [2,2,1],
+        activations = ["tanh","sigmoid"];
+
+    var model = new FCNetwork(dims, activations);
+
+    var X = Matrix( [10.0, 0.0, 10.0, 0.0],
+                    [10.0, 0.0, 10.0, 0.0]);
+
+    var Y = Matrix( [1.0, 1.0, 1.0, 1.0] );
+
+    var AL = model.forwardPass(X);
+
+    var cost = computeCost(Y,AL);
+    writeln("Cost: ",cost);
+
+    assertBoolEquals("Cost Should be Higher Than 0.6",expected=true,actual=cost>0.6);
+
+    writeln("");
+    writeln("testCostFunction... done...");
+    writeln("");
+    writeln("");
+  }
+
+  proc testBackprop() {
+    writeln("");
+    writeln("");
+    writeln("testBackprop... starting...");
+    writeln("");
+
+    var dims = [2,2,1],
+        activations = ["tanh","sigmoid"];
+
+    var model = new FCNetwork(dims, activations);
+
+    var X = Matrix( [10.0, 0.0, 10.0, 0.0],
+                    [10.0, 0.0, 10.0, 0.0]);
+
+    var Y = Matrix( [1.0, 1.0, 1.0, 1.0] );
+
+    var AL = model.forwardPass(X);
+
+    var cost = computeCost(Y,AL);
+    writeln("Cost: ",cost);
+
+    writeln("");
+    writeln("testBackprop... done...");
+    writeln("");
+    writeln("");
+  }
+
   proc run() {
     super.run();
     testBreath();
@@ -204,6 +260,7 @@ class EpochTest : UnitTest {
     testActivationForward();
     testStackBuilder();
     testForwardPass();
+    testCostFunction();
     return 0;
   }
 }
