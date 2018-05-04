@@ -38,7 +38,7 @@
         // const A_prev = A;
          const Z = this.layers[l].linearForward(A);
          const A_current = this.layers[l].activationForward(Z);
-         if ! this.trained {
+         if ! this.trained { // trained models don't need to cache anything
            this.caches[l] = new Cache();
            this.caches[l].aDom = A.domain;
            this.caches[l].A_prev = A;
@@ -52,6 +52,8 @@
      }
    }
 
+/*  Cache exists for the intermediate gradients and precusors
+           temporarily used during traing via backprop        */
    class Cache {
      var bDom: domain(1),
          wDom: domain(2),
@@ -90,15 +92,6 @@
        this.b = eps*this.b;
        this.g = new Activation(name=activation);
      }
-/*
-     proc readWriteThis(f) throws {
-       f <~> "%6s".format(this.name)
-         <~> " W:" <~> this.W.shape
-         <~> " h:" <~> this.h.shape
-         <~> " b:" <~> this.b.shape
-         <~> " a:" <~> this.a.shape;
-*/
-
 
 /*  Computes an Affine Transformation on A_prev:  Z = W.A_prev + b  */
      proc linearForward(A_prev: []) {
@@ -117,10 +110,21 @@
        return A;
      }
 
+/*  Compute the dZ precursor for backprop  */
      proc activationBackward(dA:[],Z:[]) {
-
+       const dZ: [Z.domain] real = dA * this.activation.g.df(Z);
+       return dZ;
      }
 
+/*  Compute the gradients dW, db, and dA_prev  */
+     proc linearBackward(dZ:[], A_prev:[]) {
+       const m: int = A_prev.shape[2];
+    //   const os = ones({1..dZ.shape[2],1..1});
+       const dA_prev: [A_prev.domain] real = transpose(this.W).dot(dZ);
+       const dW: [this.W.domain] real = dZ.dot(transpose(A_prev))/m;
+       const db: [this.b.domain] real = rowSums(dZ)/m;
+       return (dW, db, dA_prev);
+     }
    }
 
    class Activation {

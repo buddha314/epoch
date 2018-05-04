@@ -266,6 +266,36 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
+  proc testLinearBackward() {
+    writeln("");
+    writeln("");
+    writeln("testLinearBackward... starting...");
+    writeln("");
+
+    var dZ = Matrix( [1.0,0.0], [0.0,1.0] );
+    var A_prev = Matrix( [0.0,1.0], [1.0,0.0] );
+
+    var layer = new Layer(activation = "linear" , udim = 2, ldim = 2);
+
+    var (dW, db, dA_prev) = layer.linearBackward(dZ, A_prev);
+
+    writeln(dW);
+    writeln(dW.shape);
+    writeln("");
+    writeln(dA_prev);
+    writeln(dA_prev.shape);
+    writeln("");
+    writeln(db);
+    writeln(db.shape);
+    writeln(db.domain);
+
+    assertRealApproximates("Sum over dW",expected=1,actual=(+ reduce dW));
+
+    writeln("");
+    writeln("testLinearBackward... done...");
+    writeln("");
+    writeln("");
+  }
 
   proc run() {
     super.run();
@@ -277,6 +307,7 @@ class EpochTest : UnitTest {
     testForwardPass();
     testCostFunction();
     testCaches();
+    testLinearBackward();
     return 0;
   }
 }
