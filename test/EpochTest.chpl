@@ -251,7 +251,7 @@ class EpochTest : UnitTest {
     writeln("");
     writeln("Caches:");
     for l in model.layerDom {
-      writeln("Layer ",l," A_prev: \n",model.caches[l].A_prev);
+      writeln("Layer ",l," A: \n",model.caches[l].A);
       writeln("");
       writeln("Layer ",l," Z: \n",model.caches[l].Z);
       writeln("");
@@ -297,17 +297,134 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
+  proc testBackProp() {
+    writeln("");
+    writeln("");
+    writeln("testBackProp... starting...");
+    writeln("");
+
+    var dims = [2,2,2,1],
+        activations = ["tanh","tanh","sigmoid"];
+
+    var model = new FCNetwork(dims, activations);
+
+    var X = Matrix( [10.0, 0.0, 10.0, 0.0],
+                    [10.0, 0.0, 10.0, 0.0]);
+
+    var Y = Matrix( [1.0, 1.0, 1.0, 1.0] );
+
+    var AL = model.forwardPass(X);
+
+    var cost = computeCost(Y,AL);
+    writeln("Cost: ",cost);
+    writeln("");
+    writeln("Caches:");
+    for l in model.layerDom {
+      writeln("Layer ",l," W: \n",model.layers[l].W);
+      writeln("");
+      writeln("Layer ",l," b: \n",model.layers[l].b);
+      writeln("");
+      writeln("");
+    }
+
+    writeln("");
+
+    model.backwardPass(AL, Y);
+
+    for l in model.layerDom {
+      writeln("Layer ",l," dW: \n",model.caches[l].dW);
+      writeln("");
+      writeln("Layer ",l," db: \n",model.caches[l].db);
+      writeln("");
+      writeln("");
+    }
+
+    writeln("Before Update: \n",model.caches);
+
+    model.updateParameters(learningRate = 0.001);
+
+    writeln("After Update: \n",model.caches);
+
+    for l in model.layerDom {
+      writeln("Layer ",l," W: \n",model.layers[l].W);
+      writeln("");
+      writeln("Layer ",l," b: \n",model.layers[l].b);
+      writeln("");
+      writeln("");
+    }
+
+    var AL2 = model.forwardPass(X);
+
+    var cost2 = computeCost(Y,AL2);
+    writeln("Cost: ",cost2);
+    writeln("");
+    writeln("Parameters2:");
+    for l in model.layerDom {
+      writeln("Layer ",l," W: \n",model.layers[l].W);
+      writeln("");
+      writeln("Layer ",l," b: \n",model.layers[l].b);
+      writeln("");
+      writeln("");
+    }
+
+  //  assertIntEquals("Dim 1 of Second Cache's Z", expected=1, actual=model.caches[2].Z.shape(1));
+
+    writeln("");
+    writeln("testBackProp... done...");
+    writeln("");
+    writeln("");
+  }
+
+  proc testTraining() {
+    writeln("");
+    writeln("");
+    writeln("testTraining... starting...");
+    writeln("");
+
+
+    var dims = [2,2,1],
+        activations = ["tanh","sigmoid"],
+        epochs=100000,
+        reportInterval = 1000,
+        learningRate = 0.01;
+
+        var X = Matrix( [0.0, 0.0, 1.0, 1.0],
+                        [0.0, 1.0, 0.0, 1.0]);
+
+        var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
+
+    var testData = X;
+
+    var model = new FCNetwork(dims,activations);
+
+    model.train(X,Y,epochs,learningRate,reportInterval);
+
+    writeln("\n\n");
+
+    var preds = model.forwardPass(testData);
+    writeln("XOR Predictions: ",preds);
+    writeln("");
+
+
+    writeln("");
+    writeln("testTraining... done...");
+    writeln("");
+    writeln("");
+  }
+
   proc run() {
     super.run();
-    testBreath();
-    testHiddenLayer();
-    testLinearForward();
-    testActivationForward();
-    testStackBuilder();
-    testForwardPass();
-    testCostFunction();
-    testCaches();
-    testLinearBackward();
+//    testBreath();
+//    testHiddenLayer();
+//    testLinearForward();
+//    testActivationForward();
+//    testStackBuilder();
+//    testForwardPass();
+//    testCostFunction();
+//    testCaches();
+//    testLinearBackward();
+//    testBackProp();
+    testTraining();
     return 0;
   }
 }

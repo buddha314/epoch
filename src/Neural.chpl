@@ -13,16 +13,18 @@
 /*  A Fully Connected (FC) Neural Network is a stack of Layers  */
    class FCNetwork {
      var layerDom = {1..0},
+         cacheDom = {1..0},
          layers: [layerDom] Layer,
-         caches: [layerDom] Cache, // Populated if `trained` = false
-         dims: [layerDom] int,
+         caches: [cacheDom] Cache, // Used if `trained` = false
+         widths: [layerDom] int,
          activations: [layerDom] string,
          trained: bool = false;
 
      proc init(dims: [] int, activations: [] string) {
        this.layerDom = {1..dims.size - 1};
+       this.cacheDom = {1..dims.size};
        var layers: [layerDom] Layer;
-       var caches: [layerDom] Cache;
+       var caches: [cacheDom] Cache;
        this.layers = layers;
        this.caches = caches;
        for l in layerDom {
@@ -41,7 +43,7 @@
          if ! this.trained { // trained models don't need to cache anything
            this.caches[l] = new Cache();
            this.caches[l].aDom = A.domain;
-           this.caches[l].A_prev = A;
+           this.caches[l].A = A;
            this.caches[l].zDom = Z.domain;
            this.caches[l].Z = Z;
          }
@@ -49,6 +51,52 @@
          A = A_current;
        }
        return A;
+     }
+
+     proc backwardPass(AL, Y) {
+       const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
+       this.caches[cacheDom.size] = new Cache();
+       this.caches[cacheDom.size].aDom = dAL.domain;
+       this.caches[cacheDom.size].dA = dAL;
+  //     writeln("layerDom.high: ",this.layerDom.high);
+  //     writeln("layerDom.low: ",this.layerDom.low);
+       for l in this.layerDom.low..this.layerDom.high by -1 {
+  //       writeln("On layer ",l," right now");
+         var dZ = this.layers[l].activationBackward(dA = this.caches[l+1].dA, Z = this.caches[l].Z);
+         const (dW, db, dA_prev) = this.layers[l].linearBackward(dZ = dZ, this.caches[l].A);
+         this.caches[l].wDom = dW.domain;
+         this.caches[l].dW = dW;
+         this.caches[l].bDom = db.domain;
+         this.caches[l].db = db;
+         this.caches[l].dA = dA_prev;
+       }
+     }
+
+     proc updateParameters(learningRate = 0.001) {
+       for l in this.layerDom {
+         this.layers[l].W = this.layers[l].W - learningRate * this.caches[l].dW;
+         this.layers[l].b = this.layers[l].b - learningRate * this.caches[l].db;
+       }
+       for l in cacheDom {
+         this.caches[l] = new Cache();
+       }
+     }
+
+     proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+       for i in 1..epochs {
+         const output = this.forwardPass(X);
+         const cost = computeCost(Y, output);
+         if i % reportInterval == 0 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ",output);
+         }
+         this.backwardPass(output, Y);
+         this.updateParameters(learningRate);
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       const fcost = computeCost(Y, preds);
+       writeln("");
+       writeln("Training Done... Final Cost: ",fcost);
      }
    }
 
@@ -59,11 +107,11 @@
          wDom: domain(2),
          aDom: domain(2),
          zDom: domain(2),
-         A_prev:[aDom] real,
+         A:[aDom] real,
          Z:[zDom] real,
          dW:[wDom] real,
          db:[bDom] real,
-         dA_prev: [aDom] real,
+         dA: [aDom] real,
          dZ:[zDom] real;
 
      proc init() { }
@@ -112,17 +160,18 @@
 
 /*  Compute the dZ precursor for backprop  */
      proc activationBackward(dA:[],Z:[]) {
-       const dZ: [Z.domain] real = dA * this.activation.g.df(Z);
+       const dZ: [Z.domain] real = dA * this.g.df(Z);
        return dZ;
      }
 
 /*  Compute the gradients dW, db, and dA_prev  */
      proc linearBackward(dZ:[], A_prev:[]) {
        const m: int = A_prev.shape[2];
-    //   const os = ones({1..dZ.shape[2],1..1});
+//       writeln("Shape of WT: ",transpose(this.W).shape);
+//       writeln("Shape of dZ: ",dZ.shape);
        const dA_prev: [A_prev.domain] real = transpose(this.W).dot(dZ);
        const dW: [this.W.domain] real = dZ.dot(transpose(A_prev))/m;
-       const db: [this.b.domain] real = rowSums(dZ)/m;
+       const db: [this.b.domain] real = rowSums(dZ)/m; // pretty sure rowSums is the one I wanted
        return (dW, db, dA_prev);
      }
    }
