@@ -373,6 +373,9 @@ class EpochTest : UnitTest {
     writeln("testTraining... starting...");
     writeln("");
 
+    var t: Timer;
+    t.start();
+
 
     var dims = [2,2,1],
         activations = ["tanh","sigmoid"],
@@ -397,11 +400,15 @@ class EpochTest : UnitTest {
     writeln("XOR Predictions: ",preds);
     writeln("");
 
+    t.stop();
+    writeln("Training took: ",t.elapsed()," seconds");
+
 
     writeln("");
     writeln("testTraining... done...");
     writeln("");
     writeln("");
+
   }
 
   proc run() {
