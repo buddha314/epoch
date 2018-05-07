@@ -357,15 +357,7 @@ class EpochTest : UnitTest {
 
     var cost2 = computeCost(Y,AL2);
     writeln("Cost: ",cost2);
-    writeln("");
-    writeln("Parameters2:");
-    for l in model.layerDom {
-      writeln("Layer ",l," W: \n",model.layers[l].W);
-      writeln("");
-      writeln("Layer ",l," b: \n",model.layers[l].b);
-      writeln("");
-      writeln("");
-    }
+
 
   //  assertIntEquals("Dim 1 of Second Cache's Z", expected=1, actual=model.caches[2].Z.shape(1));
 
