@@ -53,6 +53,7 @@
        return A;
      }
 
+/*  Propagate errors back through networks and cache gradients  */
      proc backwardPass(AL, Y) {
        const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
        this.caches[cacheDom.size] = new Cache();
@@ -72,6 +73,7 @@
        }
      }
 
+/* UpdateParameters using cached gradients  */
      proc updateParameters(learningRate = 0.001) {
        for l in this.layerDom {
          this.layers[l].W = this.layers[l].W - learningRate * this.caches[l].dW;
@@ -82,6 +84,7 @@
        }
      }
 
+/*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
        const output = this.forwardPass(X);
        const cost = computeCost(Y, output);
@@ -90,6 +93,7 @@
        return (cost, output);
      }
 
+/*  Regular Gradient Descent Training  */
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate);
@@ -104,6 +108,7 @@
        writeln("Training Done... Final Cost: ",fcost);
      }
 
+/*  Minibatch Gradient Descent Training  */
      proc train(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
        var batches = 1 + X.shape[2]/batchsize: int;
        for i in 1..epochs {
