@@ -380,7 +380,7 @@ class EpochTest : UnitTest {
     var dims = [2,2,1],
         activations = ["tanh","sigmoid"],
         epochs=400000,
-        reportInterval = 10000,
+        reportInterval = 1000,
         learningRate = 0.01;
 
         var X = Matrix( [0.0, 0.0, 1.0, 1.0],
