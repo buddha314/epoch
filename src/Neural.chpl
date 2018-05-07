@@ -82,7 +82,31 @@
        }
      }
 
+     proc fullSweep(X:[], Y:[], learningRate:int = 0.001) {
+       const output = this.forwardPass(X);
+       const cost = computeCost(Y, output);
+       this.backwardPass(output, Y);
+       this.updateParameters(learningRate);
+     }
+
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+       for i in 1..epochs {
+         const output = this.forwardPass(X);
+         const cost = computeCost(Y, output);
+         if i % reportInterval == 0 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ",output);
+         }
+         this.backwardPass(output, Y);
+         this.updateParameters(learningRate);
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       const fcost = computeCost(Y, preds);
+       writeln("");
+       writeln("Training Done... Final Cost: ",fcost);
+     }
+
+     proc train(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
        for i in 1..epochs {
          const output = this.forwardPass(X);
          const cost = computeCost(Y, output);
