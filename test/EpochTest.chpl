@@ -3,6 +3,7 @@ use NumSuch,
     LinearAlgebra,
     Viterbi,
     Epoch,
+    Math,
     Core,
     Neural,
     Charcoal;
@@ -367,7 +368,7 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testTraining() {
+  proc testXOR() {
     writeln("");
     writeln("");
     writeln("testTraining... starting...");
@@ -455,6 +456,52 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
+  proc testSine() {
+    writeln("");
+    writeln("");
+    writeln("testSine... starting...");
+    writeln("");
+
+    var t: Timer;
+    t.start();
+
+
+    var dims = [2,2,1],
+        activations = ["tanh","tanh"],
+        epochs=400000,
+        reportInterval = 1000,
+        learningRate = 0.01;
+
+    var X,Z: [1..1000] real;
+    fillRandom(X);
+    X = 2*pi*X;
+    var Y = sin(X)
+
+    var testX = 2*pi*fillRandom(Z);
+    var testY = sin(testX);
+
+    var model = new FCNetwork(dims,activations);
+
+    model.train(X,Y,epochs,learningRate,reportInterval);
+
+    writeln("\n\n");
+
+    var preds = model.forwardPass(testX);
+    writeln("Sine Predictions: ",preds);
+    writeln("Actual Values:    ",testY);
+    writeln("");
+
+    t.stop();
+    writeln("Training took: ",t.elapsed()," seconds");
+
+
+    writeln("");
+    writeln("testSine... done...");
+    writeln("");
+    writeln("");
+
+  }
+
   proc run() {
     super.run();
 //    testBreath();
@@ -467,8 +514,9 @@ class EpochTest : UnitTest {
 //    testCaches();
 //    testLinearBackward();
 //    testBackProp();
-    testTraining();
+    testXOR();
 //    testMiniBatching();
+    testSine();
     return 0;
   }
 }
