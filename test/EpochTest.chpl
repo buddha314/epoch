@@ -379,8 +379,8 @@ class EpochTest : UnitTest {
 
     var dims = [2,2,1],
         activations = ["tanh","sigmoid"],
-        epochs=100000,
-        reportInterval = 1000,
+        epochs=400000,
+        reportInterval = 10000,
         learningRate = 0.01;
 
         var X = Matrix( [0.0, 0.0, 1.0, 1.0],
@@ -411,6 +411,50 @@ class EpochTest : UnitTest {
 
   }
 
+  proc testMiniBatching() {
+    writeln("");
+    writeln("");
+    writeln("testMiniBatching... starting...");
+    writeln("");
+
+    var t: Timer;
+    t.start();
+
+
+    var dims = [2,2,1],
+        activations = ["tanh","sigmoid"],
+        epochs=400000,
+        reportInterval = 10000,
+        batchsize = 4,
+        learningRate = 0.01;
+
+        var X = Matrix( [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0],
+                        [0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]);
+
+        var Y = Matrix( [0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0] );
+
+    var testData = X;
+
+    var model = new FCNetwork(dims,activations);
+
+    model.train(X,Y,epochs,learningRate,reportInterval,batchsize);
+
+    writeln("\n\n");
+
+    var preds = model.forwardPass(testData);
+    writeln("XOR Predictions: ",preds);
+    writeln("");
+
+    t.stop();
+    writeln("Training took: ",t.elapsed()," seconds");
+
+
+    writeln("");
+    writeln("testMiniBatching... done...");
+    writeln("");
+    writeln("");
+  }
+
   proc run() {
     super.run();
 //    testBreath();
@@ -424,6 +468,7 @@ class EpochTest : UnitTest {
 //    testLinearBackward();
 //    testBackProp();
     testTraining();
+//    testMiniBatching();
     return 0;
   }
 }
