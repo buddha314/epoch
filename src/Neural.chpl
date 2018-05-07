@@ -82,15 +82,42 @@
        }
      }
 
+     proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
+       const output = this.forwardPass(X);
+       const cost = computeCost(Y, output);
+       this.backwardPass(output, Y);
+       this.updateParameters(learningRate);
+       return (cost, output);
+     }
+
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
-         const output = this.forwardPass(X);
-         const cost = computeCost(Y, output);
+         var (cost, output) = this.fullSweep(X,Y,learningRate);
          if i % reportInterval == 0 {
            try! writeln("epoch: ",i,",  cost: ",cost,";     ",output);
          }
-         this.backwardPass(output, Y);
-         this.updateParameters(learningRate);
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       const fcost = computeCost(Y, preds);
+       writeln("");
+       writeln("Training Done... Final Cost: ",fcost);
+     }
+
+     proc train(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
+       var batches = 1 + X.shape[2]/batchsize: int;
+       for i in 1..epochs {
+         for batch in {1..batches} {
+           var low: int = (batch - 1) * batchsize + 1;
+           var high: int = batch * batchsize;
+           if low < X.shape[2] {
+             if high > X.shape[2] then high = X.shape[2];
+             var (cost, output) = this.fullSweep(X[1..X.shape[1],low..high],Y[1..Y.shape[1],low..high]);
+             if i % reportInterval == 0 || i == 1 {
+               try! writeln("epoch: ",i,",  batch: ",batch,",  cost: ",cost,";     ",output);
+             }
+           }
+         }
        }
        this.trained = true;
        const preds = this.forwardPass(X);
