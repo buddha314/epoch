@@ -37,10 +37,9 @@
        var Adom = X.domain;
        var A: [Adom] real = X;
        for l in this.layerDom {
-        // const A_prev = A;
          const Z = this.layers[l].linearForward(A);
          const A_current = this.layers[l].activationForward(Z);
-         if ! this.trained { // trained models don't need to cache anything
+         if ! this.trained {   // trained models don't need to cache anything
            this.caches[l] = new Cache();
            this.caches[l].aDom = A.domain;
            this.caches[l].A = A;
@@ -59,10 +58,7 @@
        this.caches[cacheDom.size] = new Cache();
        this.caches[cacheDom.size].aDom = dAL.domain;
        this.caches[cacheDom.size].dA = dAL;
-  //     writeln("layerDom.high: ",this.layerDom.high);
-  //     writeln("layerDom.low: ",this.layerDom.low);
        for l in this.layerDom.low..this.layerDom.high by -1 {
-  //       writeln("On layer ",l," right now");
          var dZ = this.layers[l].activationBackward(dA = this.caches[l+1].dA, Z = this.caches[l].Z);
          const (dW, db, dA_prev) = this.layers[l].linearBackward(dZ = dZ, this.caches[l].A);
          this.caches[l].wDom = dW.domain;
@@ -199,11 +195,9 @@
 /*  Compute the gradients dW, db, and dA_prev  */
      proc linearBackward(dZ:[], A_prev:[]) {
        const m: int = A_prev.shape[2];
-//       writeln("Shape of WT: ",transpose(this.W).shape);
-//       writeln("Shape of dZ: ",dZ.shape);
        const dA_prev: [A_prev.domain] real = transpose(this.W).dot(dZ);
        const dW: [this.W.domain] real = dZ.dot(transpose(A_prev))/m;
-       const db: [this.b.domain] real = rowSums(dZ)/m; // pretty sure rowSums is the one I wanted
+       const db: [this.b.domain] real = rowSums(dZ)/m;
        return (dW, db, dA_prev);
      }
    }
@@ -238,7 +232,7 @@
        } else if this.name == "tanh" {
          return dtanh(x);
        } else if this.name == "step" {
-         return dheaviside(x);  //maybe I'll make this dsigmoid(x) for fun?
+         return dheaviside(x);
        } else if this.name == "linear" {
          return 1;
        } else {
