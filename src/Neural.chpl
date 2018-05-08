@@ -6,6 +6,7 @@
    use LinearAlgebra,
        Time,
        Norm,
+       Math,
   //     Model,
        Random;
 
@@ -32,7 +33,7 @@
        for l in layerDom {
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
-       this.loss = new Loss(name = activations.last);
+       this.loss = new Loss(name = activations[this.layerDom.last]);
      }
 
 /*  Sends input data through a forwardPass of the Neural Network  */
@@ -57,7 +58,8 @@
 
 /*  Propagate errors back through networks and cache gradients  */
      proc backwardPass(AL, Y) {
-       const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
+  //     const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
+       const dAL: [AL.domain] real = this.loss.dJ(Y,AL);
        this.caches[cacheDom.size] = new Cache();
        this.caches[cacheDom.size].aDom = dAL.domain;
        this.caches[cacheDom.size].dA = dAL;
@@ -86,7 +88,8 @@
 /*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
        const output = this.forwardPass(X);
-       const cost = computeCost(Y, output);
+  //     const cost = computeCost(Y, output);
+       const cost = this.loss.J(Y, output);
        this.backwardPass(output, Y);
        this.updateParameters(learningRate);
        return (cost, output);
@@ -96,13 +99,14 @@
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate);
-         if i % reportInterval == 0 {
-           try! writeln("epoch: ",i,",  cost: ",cost,";     ",output);
+         if i % reportInterval == 0 || i == 1 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ");
          }
        }
        this.trained = true;
        const preds = this.forwardPass(X);
-       const fcost = computeCost(Y, preds);
+  //     const fcost = computeCost(Y, preds);
+       const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
      }
@@ -125,7 +129,8 @@
        }
        this.trained = true;
        const preds = this.forwardPass(X);
-       const fcost = computeCost(Y, preds);
+       //const fcost = computeCost(Y, preds);
+       const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
      }
@@ -257,7 +262,7 @@
 
      // Activation Functions
      proc ramp(x: real) {
-       return max(0,x)
+       return max(0,x);
      }
 
      proc sigmoid(x: real) {
@@ -327,16 +332,16 @@
         var J: real = -(+ reduce Jp)/A.domain.dim(2).size;
         return J;
       } else if this.name == "tanh" {
-        var Jp: [A.domain] real = (1-Y)*log(1-A) + (1+Y)*log(1+A);
-        var J: real = -(+ reduce Jp)/(2*A.domain.dim(2).size);
+        var Jp: [A.domain] real = ln_2 -((1-Y)*log(1-A) + (1+Y)*log(1+A));
+        var J: real = (+ reduce Jp)/(2*A.domain.dim(2).size);
         return J;
       } else if this.name == "linear" {
-        var Jp: [A.domain] real = (Y - A)**2;
-        var J: real = -(+ reduce Jp)/(2*A.domain.dim(2).size);
+        var Jp: [A.domain] real = (Y - A) * (Y - A);
+        var J: real = (+ reduce Jp)/(2*A.domain.dim(2).size);
         return J;
       } else {   // This catch-all-else should never be triggered
         var Jp: [A.domain] real = (Y - A)**2;
-        var J: real = -(+ reduce Jp)/(2*A.domain.dim(2).size);
+        var J: real = (+ reduce Jp)/(2*A.domain.dim(2).size);
         return J;
       }
     }
@@ -347,13 +352,13 @@
         var dA: [A.domain] real = -(Y/A - ((1-Y)/(1-A)));
         return dA;
       } else if this.name == "tanh" {
-        var dA: [A.domain] real = (Y-A)/(1-A**2);
+        var dA: [A.domain] real = -(Y-A)/(1-A**2);
         return dA;
       } else if this.name == "linear" {
-        var dA: [A.domain] real = Y - A;
+        var dA: [A.domain] real = A - Y;
         return dA;
       } else {   // This catch-all-else should never be triggered
-        var dA: [A.domain] real = Y - A;
+        var dA: [A.domain] real = A - Y;
         return dA;
       }
     }

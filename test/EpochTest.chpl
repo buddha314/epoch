@@ -371,7 +371,7 @@ class EpochTest : UnitTest {
   proc testXOR() {
     writeln("");
     writeln("");
-    writeln("testTraining... starting...");
+    writeln("testXOR... starting...");
     writeln("");
 
     var t: Timer;
@@ -406,7 +406,7 @@ class EpochTest : UnitTest {
 
 
     writeln("");
-    writeln("testTraining... done...");
+    writeln("testXOR... done...");
     writeln("");
     writeln("");
 
@@ -423,7 +423,7 @@ class EpochTest : UnitTest {
 
 
     var dims = [2,2,1],
-        activations = ["tanh","sigmoid"],
+        activations = ["tanh","linear"],
         epochs=400000,
         reportInterval = 10000,
         batchsize = 4,
@@ -456,7 +456,7 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testSine() {/*
+  proc testSine() {
     writeln("");
     writeln("");
     writeln("testSine... starting...");
@@ -466,19 +466,24 @@ class EpochTest : UnitTest {
     t.start();
 
 
-    var dims = [2,2,1],
-        activations = ["tanh","tanh"],
-        epochs=400000,
-        reportInterval = 1000,
+    var dom: domain(2) = {1..1,1..1000};
+    var X,Z: [dom] real;
+    fillRandom(X);
+    fillRandom(Z);
+    X = 2*pi*X;
+    Z = 2*pi*Z;
+    X = Matrix(X);
+    Z = Matrix(Z);
+    var Y: X.type = sin(X);
+    var testX: Z.type = Z;
+    var testY: Z.type = sin(testX);
+
+    var dims = [X.shape[1],4,1],
+        activations = ["tanh","linear"],
+        epochs=100000,
+        reportInterval = 10000,
         learningRate = 0.01;
 
-    var X,Z: [1..1000] real;
-    fillRandom(X);
-    X = 2*pi*X;
-    var Y = sin(X)
-
-    var testX = 2*pi*fillRandom(Z);
-    var testY = sin(testX);
 
     var model = new FCNetwork(dims,activations);
 
@@ -487,8 +492,8 @@ class EpochTest : UnitTest {
     writeln("\n\n");
 
     var preds = model.forwardPass(testX);
-    writeln("Sine Predictions: ",preds);
-    writeln("Actual Values:    ",testY);
+    writeln("Sine Predictions: ",preds[1,1..10]);
+    writeln("Actual Values:    ",testY[1,1..10]);
     writeln("");
 
     t.stop();
@@ -499,7 +504,6 @@ class EpochTest : UnitTest {
     writeln("testSine... done...");
     writeln("");
     writeln("");
-*/
   }
 
   proc run() {
@@ -514,9 +518,9 @@ class EpochTest : UnitTest {
 //    testCaches();
 //    testLinearBackward();
 //    testBackProp();
-    testXOR();
+//    testXOR();
 //    testMiniBatching();
-//    testSine();
+    testSine();
     return 0;
   }
 }
