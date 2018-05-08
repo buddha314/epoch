@@ -478,10 +478,10 @@ class EpochTest : UnitTest {
     var testX: Z.type = Z;
     var testY: Z.type = sin(testX);
 
-    var dims = [X.shape[1],4,1],
+    var dims = [X.shape[1],3,1],
         activations = ["tanh","linear"],
         epochs=100000,
-        reportInterval = 10000,
+        reportInterval = 1000,
         learningRate = 0.01;
 
 
