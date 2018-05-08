@@ -10,6 +10,7 @@
        Random;
 
 
+
 /*  A Fully Connected (FC) Neural Network is a stack of Layers  */
    class FCNetwork {
      var layerDom = {1..0},
@@ -17,6 +18,7 @@
          layers: [layerDom] Layer,
          caches: [cacheDom] Cache, // Used if `trained` = false
          widths: [layerDom] int,
+         loss: Loss,
          activations: [layerDom] string,
          trained: bool = false;
 
@@ -30,6 +32,7 @@
        for l in layerDom {
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
+       this.loss = new Loss(name = activations.last);
      }
 
 /*  Sends input data through a forwardPass of the Neural Network  */
@@ -69,7 +72,7 @@
        }
      }
 
-/* UpdateParameters using cached gradients  */
+/*  UpdateParameters using cached gradients  */
      proc updateParameters(learningRate = 0.001) {
        for l in this.layerDom {
          this.layers[l].W = this.layers[l].W - learningRate * this.caches[l].dW;
@@ -128,6 +131,10 @@
      }
    }
 
+
+
+
+
 /*  Cache exists for the intermediate gradients and precusors
            temporarily used during traing via backprop        */
    class Cache {
@@ -144,6 +151,10 @@
 
      proc init() { }
    }
+
+
+
+
 
 /*  A Layer of a Neural Network is defined by it's activation, weights, and bias  */
    class Layer {
@@ -202,6 +213,10 @@
      }
    }
 
+
+
+
+/*  Class for Activation Function and their Derivatives  */
    class Activation {
      var name: string;
      proc init(name: string) {
@@ -242,11 +257,7 @@
 
      // Activation Functions
      proc ramp(x: real) {
-       if x < 0 {
-         return 0;
-       } else {
-         return x;
-       }
+       return max(0,x)
      }
 
      proc sigmoid(x: real) {
@@ -301,19 +312,50 @@
     return J;
   }
 
+
+
+/*  Class for Assigning the Appropiate Loss Function Based on Output Layer  */
   class Loss {
     var name: string;
-    proc init(name: string="DEFAULT") {
+    proc init(name: string) {
       this.name = name;
     }
-    proc J(yHat: [], y:[]) {
-      var r: [yHat.domain] real;
-      if this.name == "DEFAULT" {
-        r = yHat - y;
-      } else {
-        r = yHat - y;
+    //   Losses
+    proc J(Y:[],A:[]) {
+      if this.name == "sigmoid" {
+        var Jp: [A.domain] real = Y*log(A) + (1-Y)*log(1-A);
+        var J: real = -(+ reduce Jp)/A.domain.dim(2).size;
+        return J;
+      } else if this.name == "tanh" {
+        var Jp: [A.domain] real = (1-Y)*log(1-A) + (1+Y)*log(1+A);
+        var J: real = -(+ reduce Jp)/(2*A.domain.dim(2).size);
+        return J;
+      } else if this.name == "linear" {
+        var Jp: [A.domain] real = (Y - A)**2;
+        var J: real = -(+ reduce Jp)/(2*A.domain.dim(2).size);
+        return J;
+      } else {   // This catch-all-else should never be triggered
+        var Jp: [A.domain] real = (Y - A)**2;
+        var J: real = -(+ reduce Jp)/(2*A.domain.dim(2).size);
+        return J;
       }
-      return r;
+    }
+
+    //   Derivatives
+    proc dJ(Y:[], A:[]) {
+      if this.name == "sigmoid" {
+        var dA: [A.domain] real = -(Y/A - ((1-Y)/(1-A)));
+        return dA;
+      } else if this.name == "tanh" {
+        var dA: [A.domain] real = (Y-A)/(1-A**2);
+        return dA;
+      } else if this.name == "linear" {
+        var dA: [A.domain] real = Y - A;
+        return dA;
+      } else {   // This catch-all-else should never be triggered
+        var dA: [A.domain] real = Y - A;
+        return dA;
+      }
     }
   }
 
