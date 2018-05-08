@@ -6,8 +6,10 @@
    use LinearAlgebra,
        Time,
        Norm,
+       Math,
   //     Model,
        Random;
+
 
 
 /*  A Fully Connected (FC) Neural Network is a stack of Layers  */
@@ -17,6 +19,7 @@
          layers: [layerDom] Layer,
          caches: [cacheDom] Cache, // Used if `trained` = false
          widths: [layerDom] int,
+         loss: Loss,
          activations: [layerDom] string,
          trained: bool = false;
 
@@ -30,6 +33,7 @@
        for l in layerDom {
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
+       this.loss = new Loss(name = activations[this.layerDom.last]);
      }
 
 /*  Sends input data through a forwardPass of the Neural Network  */
@@ -37,10 +41,9 @@
        var Adom = X.domain;
        var A: [Adom] real = X;
        for l in this.layerDom {
-        // const A_prev = A;
          const Z = this.layers[l].linearForward(A);
          const A_current = this.layers[l].activationForward(Z);
-         if ! this.trained { // trained models don't need to cache anything
+         if ! this.trained {   // trained models don't need to cache anything
            this.caches[l] = new Cache();
            this.caches[l].aDom = A.domain;
            this.caches[l].A = A;
@@ -53,15 +56,14 @@
        return A;
      }
 
+/*  Propagate errors back through networks and cache gradients  */
      proc backwardPass(AL, Y) {
-       const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
+  //     const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
+       const dAL: [AL.domain] real = this.loss.dJ(Y,AL);
        this.caches[cacheDom.size] = new Cache();
        this.caches[cacheDom.size].aDom = dAL.domain;
        this.caches[cacheDom.size].dA = dAL;
-  //     writeln("layerDom.high: ",this.layerDom.high);
-  //     writeln("layerDom.low: ",this.layerDom.low);
        for l in this.layerDom.low..this.layerDom.high by -1 {
-  //       writeln("On layer ",l," right now");
          var dZ = this.layers[l].activationBackward(dA = this.caches[l+1].dA, Z = this.caches[l].Z);
          const (dW, db, dA_prev) = this.layers[l].linearBackward(dZ = dZ, this.caches[l].A);
          this.caches[l].wDom = dW.domain;
@@ -72,6 +74,7 @@
        }
      }
 
+/*  UpdateParameters using cached gradients  */
      proc updateParameters(learningRate = 0.001) {
        for l in this.layerDom {
          this.layers[l].W = this.layers[l].W - learningRate * this.caches[l].dW;
@@ -82,23 +85,60 @@
        }
      }
 
+/*  Full front and back sweep with parameter updates  */
+     proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
+       const output = this.forwardPass(X);
+  //     const cost = computeCost(Y, output);
+       const cost = this.loss.J(Y, output);
+       this.backwardPass(output, Y);
+       this.updateParameters(learningRate);
+       return (cost, output);
+     }
+
+/*  Regular Gradient Descent Training  */
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
-         const output = this.forwardPass(X);
-         const cost = computeCost(Y, output);
-         if i % reportInterval == 0 {
-           try! writeln("epoch: ",i,",  cost: ",cost,";     ",output);
+         var (cost, output) = this.fullSweep(X,Y,learningRate);
+         if i % reportInterval == 0 || i == 1 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ");
          }
-         this.backwardPass(output, Y);
-         this.updateParameters(learningRate);
        }
        this.trained = true;
        const preds = this.forwardPass(X);
-       const fcost = computeCost(Y, preds);
+  //     const fcost = computeCost(Y, preds);
+       const fcost = this.loss.J(Y, preds);
+       writeln("");
+       writeln("Training Done... Final Cost: ",fcost);
+     }
+
+/*  Minibatch Gradient Descent Training  */
+     proc train(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
+       var batches = 1 + X.shape[2]/batchsize: int;
+       for i in 1..epochs {
+         for batch in {1..batches} {
+           var low: int = (batch - 1) * batchsize + 1;
+           var high: int = batch * batchsize;
+           if low < X.shape[2] {
+             if high > X.shape[2] then high = X.shape[2];
+             var (cost, output) = this.fullSweep(X[1..X.shape[1],low..high],Y[1..Y.shape[1],low..high]);
+             if i % reportInterval == 0 || i == 1 {
+               try! writeln("epoch: ",i,",  batch: ",batch,",  cost: ",cost,";     ",output);
+             }
+           }
+         }
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       //const fcost = computeCost(Y, preds);
+       const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
      }
    }
+
+
+
+
 
 /*  Cache exists for the intermediate gradients and precusors
            temporarily used during traing via backprop        */
@@ -116,6 +156,10 @@
 
      proc init() { }
    }
+
+
+
+
 
 /*  A Layer of a Neural Network is defined by it's activation, weights, and bias  */
    class Layer {
@@ -167,15 +211,17 @@
 /*  Compute the gradients dW, db, and dA_prev  */
      proc linearBackward(dZ:[], A_prev:[]) {
        const m: int = A_prev.shape[2];
-//       writeln("Shape of WT: ",transpose(this.W).shape);
-//       writeln("Shape of dZ: ",dZ.shape);
        const dA_prev: [A_prev.domain] real = transpose(this.W).dot(dZ);
        const dW: [this.W.domain] real = dZ.dot(transpose(A_prev))/m;
-       const db: [this.b.domain] real = rowSums(dZ)/m; // pretty sure rowSums is the one I wanted
+       const db: [this.b.domain] real = rowSums(dZ)/m;
        return (dW, db, dA_prev);
      }
    }
 
+
+
+
+/*  Class for Activation Function and their Derivatives  */
    class Activation {
      var name: string;
      proc init(name: string) {
@@ -206,7 +252,7 @@
        } else if this.name == "tanh" {
          return dtanh(x);
        } else if this.name == "step" {
-         return dheaviside(x);  //maybe I'll make this dsigmoid(x) for fun?
+         return dheaviside(x);
        } else if this.name == "linear" {
          return 1;
        } else {
@@ -216,11 +262,7 @@
 
      // Activation Functions
      proc ramp(x: real) {
-       if x < 0 {
-         return 0;
-       } else {
-         return x;
-       }
+       return max(0,x);
      }
 
      proc sigmoid(x: real) {
@@ -275,19 +317,50 @@
     return J;
   }
 
+
+
+/*  Class for Assigning the Appropiate Loss Function Based on Output Layer  */
   class Loss {
     var name: string;
-    proc init(name: string="DEFAULT") {
+    proc init(name: string) {
       this.name = name;
     }
-    proc J(yHat: [], y:[]) {
-      var r: [yHat.domain] real;
-      if this.name == "DEFAULT" {
-        r = yHat - y;
-      } else {
-        r = yHat - y;
+    //   Losses
+    proc J(Y:[],A:[]) {
+      if this.name == "sigmoid" {
+        var Jp: [A.domain] real = Y*log(A) + (1-Y)*log(1-A);
+        var J: real = -(+ reduce Jp)/A.domain.dim(2).size;
+        return J;
+      } else if this.name == "tanh" {
+        var Jp: [A.domain] real = ln_2 -((1-Y)*log(1-A) + (1+Y)*log(1+A));
+        var J: real = (+ reduce Jp)/(2*A.domain.dim(2).size);
+        return J;
+      } else if this.name == "linear" {
+        var Jp: [A.domain] real = (Y - A) * (Y - A);
+        var J: real = (+ reduce Jp)/(2*A.domain.dim(2).size);
+        return J;
+      } else {   // This catch-all-else should never be triggered
+        var Jp: [A.domain] real = (Y - A)**2;
+        var J: real = (+ reduce Jp)/(2*A.domain.dim(2).size);
+        return J;
       }
-      return r;
+    }
+
+    //   Derivatives
+    proc dJ(Y:[], A:[]) {
+      if this.name == "sigmoid" {
+        var dA: [A.domain] real = -(Y/A - ((1-Y)/(1-A)));
+        return dA;
+      } else if this.name == "tanh" {
+        var dA: [A.domain] real = -(Y-A)/(1-A**2);
+        return dA;
+      } else if this.name == "linear" {
+        var dA: [A.domain] real = A - Y;
+        return dA;
+      } else {   // This catch-all-else should never be triggered
+        var dA: [A.domain] real = A - Y;
+        return dA;
+      }
     }
   }
 
