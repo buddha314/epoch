@@ -456,7 +456,7 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testSine() {/*
+  proc testSine() {
     writeln("");
     writeln("");
     writeln("testSine... starting...");
@@ -504,7 +504,7 @@ class EpochTest : UnitTest {
     writeln("testSine... done...");
     writeln("");
     writeln("");
-*/
+
   }
 
   proc run() {
@@ -521,7 +521,7 @@ class EpochTest : UnitTest {
 //    testBackProp();
 //    testXOR();
 //    testMiniBatching();
-//    testSine();
+    testSine();
     return 0;
   }
 }
