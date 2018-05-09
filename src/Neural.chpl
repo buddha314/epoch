@@ -17,7 +17,7 @@
      var layerDom = {1..0},
          cacheDom = {1..0},
          layers: [layerDom] Layer,
-         caches: [cacheDom] Cache, // Used if `trained` = false
+  //       caches: [cacheDom] Cache,
          widths: [layerDom] int,
          loss: Loss,
          activations: [layerDom] string,
@@ -25,11 +25,8 @@
 
      proc init(dims: [] int, activations: [] string) {
        this.layerDom = {1..dims.size - 1};
-       this.cacheDom = {1..dims.size};
        var layers: [layerDom] Layer;
-       var caches: [cacheDom] Cache;
        this.layers = layers;
-       this.caches = caches;
        for l in layerDom {
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
@@ -43,13 +40,23 @@
        for l in this.layerDom {
          const Z = this.layers[l].linearForward(A);
          const A_current = this.layers[l].activationForward(Z);
-         if ! this.trained {   // trained models don't need to cache anything
-           this.caches[l] = new Cache();
-           this.caches[l].aDom = A.domain;
-           this.caches[l].A = A;
-           this.caches[l].zDom = Z.domain;
-           this.caches[l].Z = Z;
-         }
+         Adom = A_current.domain;
+         A = A_current;
+       }
+       return A;
+     }
+
+     proc forwardPass(X:[], caches: [] Cache) {
+       var Adom = X.domain;
+       var A: [Adom] real = X;
+       for l in this.layerDom {
+         const Z = this.layers[l].linearForward(A);
+         const A_current = this.layers[l].activationForward(Z);
+         caches[l] = new Cache();
+         caches[l].aDom = A.domain;
+         caches[l].A = A;
+         caches[l].zDom = Z.domain;
+         caches[l].Z = Z;
          Adom = A_current.domain;
          A = A_current;
        }
@@ -57,39 +64,43 @@
      }
 
 /*  Propagate errors back through networks and cache gradients  */
-     proc backwardPass(AL, Y) {
+     proc backwardPass(AL, Y, caches) {
        const dAL: [AL.domain] real = this.loss.dJ(Y,AL);
-       this.caches[cacheDom.size] = new Cache();
-       this.caches[cacheDom.size].aDom = dAL.domain;
-       this.caches[cacheDom.size].dA = dAL;
+       caches[caches.domain.size].aDom = dAL.domain;
+       caches[caches.domain.size].dA = dAL;
        for l in this.layerDom.low..this.layerDom.high by -1 {
-         var dZ = this.layers[l].activationBackward(dA = this.caches[l+1].dA, Z = this.caches[l].Z);
-         const (dW, db, dA_prev) = this.layers[l].linearBackward(dZ = dZ, this.caches[l].A);
-         this.caches[l].wDom = dW.domain;
-         this.caches[l].dW = dW;
-         this.caches[l].bDom = db.domain;
-         this.caches[l].db = db;
-         this.caches[l].dA = dA_prev;
+         var dZ = this.layers[l].activationBackward(dA = caches[l+1].dA, Z = caches[l].Z);
+         const (dW, db, dA_prev) = this.layers[l].linearBackward(dZ = dZ, caches[l].A);
+         caches[l].wDom = dW.domain;
+         caches[l].dW = dW;
+         caches[l].bDom = db.domain;
+         caches[l].db = db;
+         caches[l].dA = dA_prev;
        }
      }
 
 /*  UpdateParameters using cached gradients  */
-     proc updateParameters(learningRate = 0.001) {
+     proc updateParameters(learningRate = 0.001, caches) {
        for l in this.layerDom {
-         this.layers[l].W = this.layers[l].W - learningRate * this.caches[l].dW;
-         this.layers[l].b = this.layers[l].b - learningRate * this.caches[l].db;
+         this.layers[l].W = this.layers[l].W - learningRate * caches[l].dW;
+         this.layers[l].b = this.layers[l].b - learningRate * caches[l].db;
        }
        for l in cacheDom {
-         this.caches[l] = new Cache();
+         delete caches[l];
+         caches[l] = new Cache();
        }
      }
 
 /*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
-       const output = this.forwardPass(X);
+       var cacheDom: domain(1) = {1..this.layerDom.size + 1};
+       var caches: [cacheDom] Cache;
+       for l in cacheDom do caches[l] = new Cache();
+       const output = this.forwardPass(X, caches);
        const cost = this.loss.J(Y, output);
-       this.backwardPass(output, Y);
-       this.updateParameters(learningRate);
+       this.backwardPass(output, Y, caches);
+       this.updateParameters(learningRate, caches);
+       delete caches;
        return (cost, output);
      }
 
@@ -103,7 +114,6 @@
        }
        this.trained = true;
        const preds = this.forwardPass(X);
-  //     const fcost = computeCost(Y, preds);
        const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
@@ -145,6 +155,7 @@
          wDom: domain(2),
          aDom: domain(2),
          zDom: domain(2),
+         W_vel: [wDom] real,
          A:[aDom] real,
          Z:[zDom] real,
          dW:[wDom] real,
