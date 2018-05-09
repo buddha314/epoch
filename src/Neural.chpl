@@ -58,7 +58,6 @@
 
 /*  Propagate errors back through networks and cache gradients  */
      proc backwardPass(AL, Y) {
-  //     const dAL: [AL.domain] real = -(Y/AL - ((1-Y)/(1-AL)));
        const dAL: [AL.domain] real = this.loss.dJ(Y,AL);
        this.caches[cacheDom.size] = new Cache();
        this.caches[cacheDom.size].aDom = dAL.domain;
@@ -88,7 +87,6 @@
 /*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
        const output = this.forwardPass(X);
-  //     const cost = computeCost(Y, output);
        const cost = this.loss.J(Y, output);
        this.backwardPass(output, Y);
        this.updateParameters(learningRate);
