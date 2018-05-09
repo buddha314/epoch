@@ -385,7 +385,7 @@ class EpochTest : UnitTest {
         learningRate = 0.01;
 
     var X = Matrix( [0.0, 0.0, 1.0, 1.0],
-                    [0.0, 1.0, 0.0, 1.0]);
+                    [0.0, 1.0, 0.0, 1.0] );
 
     var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
 
@@ -393,7 +393,7 @@ class EpochTest : UnitTest {
 
     var model = new FCNetwork(dims,activations);
 
-    model.train(X,Y,epochs,learningRate,reportInterval);
+    model.train(X,Y,momentum = 0.9, epochs,learningRate,reportInterval);
 
     writeln("\n\n");
 
@@ -488,7 +488,7 @@ class EpochTest : UnitTest {
 
     var model = new FCNetwork(dims,activations);
 
-    model.train(X,Y,epochs,learningRate,reportInterval);
+    model.train(X,Y, momentum = 0.9, epochs,learningRate,reportInterval);
 
     writeln("\n\n");
 
@@ -520,9 +520,9 @@ class EpochTest : UnitTest {
 //    testCaches();
 //    testLinearBackward();
 //    testBackProp();
-    testXOR();
+//    testXOR();
 //    testMiniBatching();
-//    testSine();
+    testSine();
     return 0;
   }
 }

@@ -15,9 +15,7 @@
 /*  A Fully Connected (FC) Neural Network is a stack of Layers  */
    class FCNetwork {
      var layerDom = {1..0},
-         cacheDom = {1..0},
          layers: [layerDom] Layer,
-  //       caches: [cacheDom] Cache,
          widths: [layerDom] int,
          loss: Loss,
          activations: [layerDom] string,
@@ -52,7 +50,6 @@
        for l in this.layerDom {
          const Z = this.layers[l].linearForward(A);
          const A_current = this.layers[l].activationForward(Z);
-         caches[l] = new Cache();
          caches[l].aDom = A.domain;
          caches[l].A = A;
          caches[l].zDom = Z.domain;
@@ -82,15 +79,26 @@
 /*  UpdateParameters using cached gradients  */
      proc updateParameters(learningRate = 0.001, caches) {
        for l in this.layerDom {
-         this.layers[l].W = this.layers[l].W - learningRate * caches[l].dW;
-         this.layers[l].b = this.layers[l].b - learningRate * caches[l].db;
+         this.layers[l].W = this.layers[l].W - learningRate * caches[l].dW;  // dW = V_w if momentum is being used
+         this.layers[l].b = this.layers[l].b - learningRate * caches[l].db;  // db = V_b if momentum is being used
        }
-       for l in cacheDom {
+       for l in caches.domain {
          delete caches[l];
          caches[l] = new Cache();
        }
      }
-
+/*
+     proc updateParameters(learningRate = 0.001, caches) {
+       for l in this.layerDom {
+         this.layers[l].W = this.layers[l].W - learningRate * caches[l].W_vel;
+         this.layers[l].b = this.layers[l].b - learningRate * caches[l].d_vel;
+       }
+       for l in caches.domain {
+         delete caches[l];
+         caches[l] = new Cache();
+       }
+     }
+*/
 /*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
        var cacheDom: domain(1) = {1..this.layerDom.size + 1};
@@ -104,10 +112,50 @@
        return (cost, output);
      }
 
+/*  Full Sweep with Momentum  */
+     proc fullSweep(X:[], Y:[], learningRate:real = 0.001, momentum: real, velCaches: [] Cache) {
+       var cacheDom: domain(1) = {1..this.layerDom.size + 1};
+       var caches: [cacheDom] Cache;
+       for l in cacheDom do caches[l] = new Cache();
+       const output = this.forwardPass(X, caches);
+       const cost = this.loss.J(Y, output);
+       this.backwardPass(output, Y, caches);
+       for l in this.layerDom {
+         caches[l].dW = momentum * velCaches[l].W_vel + (1 - momentum) * caches[l].dW;
+         caches[l].db = momentum * velCaches[l].b_vel + (1 - momentum) * caches[l].db;
+         velCaches[l].W_vel = caches[l].dW;
+         velCaches[l].b_vel = caches[l].db;
+       }
+       this.updateParameters(learningRate, caches);
+       delete caches;
+       return (cost, output);
+     }
+
 /*  Regular Gradient Descent Training  */
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate);
+         if i % reportInterval == 0 || i == 1 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ");
+         }
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       const fcost = this.loss.J(Y, preds);
+       writeln("");
+       writeln("Training Done... Final Cost: ",fcost);
+     }
+
+/*  Gradient Descent with Momentum  */
+     proc train(X:[], Y:[], momentum: real, epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+       var velCaches: [this.layerDom] Cache;
+       for l in this.layerDom {
+          velCaches[l] = new Cache();
+          velCaches[l].wDom = this.layers[l].wDom;
+          velCaches[l].bDom = this.layers[l].bDom;
+       }
+       for i in 1..epochs {
+         var (cost, output) = this.fullSweep(X,Y,learningRate, momentum: real, velCaches);
          if i % reportInterval == 0 || i == 1 {
            try! writeln("epoch: ",i,",  cost: ",cost,";     ");
          }
@@ -156,6 +204,7 @@
          aDom: domain(2),
          zDom: domain(2),
          W_vel: [wDom] real,
+         b_vel: [bDom] real,
          A:[aDom] real,
          Z:[zDom] real,
          dW:[wDom] real,
