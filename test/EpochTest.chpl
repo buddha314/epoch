@@ -379,26 +379,27 @@ class EpochTest : UnitTest {
 
 
     var dims = [2,2,1],
-        activations = ["tanh","sigmoid"],
-        epochs=400000,
+        activations = ["tanh","linear"],
+        epochs=100000,
         reportInterval = 1000,
         learningRate = 0.01;
 
-        var X = Matrix( [0.0, 0.0, 1.0, 1.0],
-                        [0.0, 1.0, 0.0, 1.0]);
+    var X = Matrix( [0.0, 0.0, 1.0, 1.0],
+                    [0.0, 1.0, 0.0, 1.0] );
 
-        var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
+    var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
 
-    var testData = X;
+    var testX = X;
 
     var model = new FCNetwork(dims,activations);
 
-    model.train(X,Y,epochs,learningRate,reportInterval);
+    model.train(X,Y,momentum = 0.9, epochs,learningRate,reportInterval);
 
     writeln("\n\n");
 
-    var preds = model.forwardPass(testData);
+    var preds = model.forwardPass(testX);
     writeln("XOR Predictions: ",preds);
+  //  writeln("Actual Values:   ",testY);
     writeln("");
 
     t.stop();
@@ -487,7 +488,7 @@ class EpochTest : UnitTest {
 
     var model = new FCNetwork(dims,activations);
 
-    model.train(X,Y,epochs,learningRate,reportInterval);
+    model.train(X,Y, momentum = 0.9, epochs,learningRate,reportInterval);
 
     writeln("\n\n");
 
