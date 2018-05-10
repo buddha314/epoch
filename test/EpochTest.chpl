@@ -48,16 +48,11 @@ class EpochTest : UnitTest {
   }
 
   proc testBreath(){
-    writeln("");
-    writeln("");
-    writeln("Breathe Deep...");
-    writeln("");
-    writeln("");
-    writeln("");
+
   }
 
   proc testHiddenLayer() {
-    writeln("testHiddenLayer... starting...");
+
 
     var udim = 3,
         ldim = 4,
@@ -68,11 +63,11 @@ class EpochTest : UnitTest {
     var reluN = layer.g.f(-3);
 
     assertRealApproximates("RELU Activation is Correct",expected=3,actual=reluP+reluN);
-    writeln("testHiddenLayer... done... \n");
+
   }
 
   proc testLinearForward() {
-    writeln("testLinearForward... starting...");
+
 
     var X = Matrix( [1.0,0.0,0.0,0.0], [1.0,0.0,0.0,0.0], [1.0,0.0,0.0,0.0] );
     var udim = 2,
@@ -85,11 +80,10 @@ class EpochTest : UnitTest {
     assertIntEquals("Top Dim is W.shape[1]",expected=layer.W.shape[1],actual=Z.shape[1]);
     assertIntEquals("Bottom Dim is X.shape[2]",expected=X.shape[2],actual=Z.shape[2]);
 
-    writeln("testLinearForward... done... \n");
   }
 
   proc testActivationForward() {
-    writeln("testActivationForward... starting...");
+
 
     var X = Matrix( [100.0,0.0,10.0,0.0], [100.0,0.0,10.0,0.0], [100.0,0.0,10.0,0.0] );
     var udim = 2,
@@ -103,11 +97,10 @@ class EpochTest : UnitTest {
 
     assertRealApproximates("In this test, A equals Z", expected=Z[1,1], actual=A[1,1]);
 
-    writeln("testActivationForward... done... \n");
   }
 
   proc testStackBuilder() {
-    writeln("testStackBuilder... starting...");
+
 
     var dims = [3,4,2,3,1],
         activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
@@ -115,11 +108,10 @@ class EpochTest : UnitTest {
     var model = new FCNetwork(dims, activations);
     assertIntEquals("Output Dimension of Layer 3 should be 3", expected=3, actual=model.layers[3].W.shape(1));
 
-    writeln("testStackBuilder... done... \n");
   }
 
   proc testForwardPass() {
-    writeln("testForwardPass... starting...");
+
 
     var dims = [3,4,2,3,1],
         activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
@@ -133,11 +125,10 @@ class EpochTest : UnitTest {
     var output = model.forwardPass(X);
     assertIntEquals("Single Node Output Expected", expected=1, actual=output.shape(1));
 
-    writeln("testForwardPass... done... \n");
   }
 
   proc testCostFunction() {
-    writeln("testCostFunction... starting...");
+
 
     var dims = [2,2,1],
         activations = ["tanh","sigmoid"];
@@ -155,11 +146,10 @@ class EpochTest : UnitTest {
 
     assertBoolEquals("Cost Should be Higher Than 0.6",expected=true,actual=cost>0.6);
 
-    writeln("testCostFunction... done... \n");
   }
 
   proc testLinearBackward() {
-    writeln("testLinearBackward... starting...");
+
 
     var dZ = Matrix( [1.0,0.0], [0.0,1.0] );
     var A_prev = Matrix( [0.0,1.0], [1.0,0.0] );
@@ -170,11 +160,9 @@ class EpochTest : UnitTest {
 
     assertRealApproximates("Sum over dW",expected=1,actual=(+ reduce dW));
 
-    writeln("testLinearBackward... done...\n");
   }
 
   proc testXOR() {
-    writeln("testXOR... starting... ");
 
 
     var t: Timer;
@@ -208,8 +196,6 @@ class EpochTest : UnitTest {
     var cost = model.loss.J(testY,preds);
 
     assertBoolEquals("Cost less than 0.00000001", expected=true, actual=0.000000001>cost);
-
-    writeln("testXOR... done... \n");
   }
 
   proc run() {
