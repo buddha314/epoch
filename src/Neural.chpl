@@ -87,18 +87,8 @@
          caches[l] = new Cache();
        }
      }
-/*
-     proc updateParameters(learningRate = 0.001, caches) {
-       for l in this.layerDom {
-         this.layers[l].W = this.layers[l].W - learningRate * caches[l].W_vel;
-         this.layers[l].b = this.layers[l].b - learningRate * caches[l].d_vel;
-       }
-       for l in caches.domain {
-         delete caches[l];
-         caches[l] = new Cache();
-       }
-     }
-*/
+
+
 /*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
        var cacheDom: domain(1) = {1..this.layerDom.size + 1};
@@ -130,6 +120,21 @@
        delete caches;
        return (cost, output);
      }
+
+     proc train_(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+       for i in 1..epochs {
+         var (cost, output) = this.fullSweep(X,Y,learningRate);/*
+         if i % reportInterval == 0 || i == 1 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ");
+         }*/
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       const fcost = this.loss.J(Y, preds);
+  //     writeln("");
+  //     writeln("Training Done... Final Cost: ",fcost);
+     }
+
 
 /*  Regular Gradient Descent Training  */
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
