@@ -360,57 +360,12 @@ class EpochTest : UnitTest {
     writeln("Cost: ",cost2);
 
 
-  //  assertIntEquals("Dim 1 of Second Cache's Z", expected=1, actual=model.caches[2].Z.shape(1));
+  assertBoolEquals("Dim 1 of Second Cache's Z", expected=true, actual=cost>cost2));
 
     writeln("");
     writeln("testBackProp... done...");
     writeln("");
     writeln("");
-  }
-
-  proc testXOR() {
-    writeln("");
-    writeln("");
-    writeln("testXOR... starting...");
-    writeln("");
-
-    var t: Timer;
-    t.start();
-
-
-    var dims = [2,2,1],
-        activations = ["tanh","linear"],
-        epochs=100000,
-        reportInterval = 1000,
-        learningRate = 0.01;
-
-    var X = Matrix( [0.0, 0.0, 1.0, 1.0],
-                    [0.0, 1.0, 0.0, 1.0] );
-
-    var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
-
-    var testX = X;
-
-    var model = new FCNetwork(dims,activations);
-
-    model.train(X,Y,momentum = 0.9, epochs,learningRate,reportInterval);
-
-    writeln("\n\n");
-
-    var preds = model.forwardPass(testX);
-    writeln("XOR Predictions: ",preds);
-  //  writeln("Actual Values:   ",testY);
-    writeln("");
-
-    t.stop();
-    writeln("Training took: ",t.elapsed()," seconds");
-
-
-    writeln("");
-    writeln("testXOR... done...");
-    writeln("");
-    writeln("");
-
   }
 
   proc testMiniBatching() {
@@ -457,72 +412,19 @@ class EpochTest : UnitTest {
     writeln("");
   }
 
-  proc testSine() {
-    writeln("");
-    writeln("");
-    writeln("testSine... starting...");
-    writeln("");
-
-    var t: Timer;
-    t.start();
-
-
-    var dom: domain(2) = {1..1,1..1000};
-    var X,Z: [dom] real;
-    fillRandom(X);
-    fillRandom(Z);
-    X = 2*pi*X;
-    Z = 2*pi*Z;
-    X = Matrix(X);
-    Z = Matrix(Z);
-    var Y: X.type = sin(X);
-    var testX: Z.type = Z;
-    var testY: Z.type = sin(testX);
-
-    var dims = [X.shape[1],3,1],
-        activations = ["tanh","linear"],
-        epochs=100000,
-        reportInterval = 1000,
-        learningRate = 0.01;
-
-
-    var model = new FCNetwork(dims,activations);
-
-    model.train(X,Y, momentum = 0.9, epochs,learningRate,reportInterval);
-
-    writeln("\n\n");
-
-    var preds = model.forwardPass(testX);
-    writeln("Sine Predictions: ",preds[1,1..10]);
-    writeln("Actual Values:    ",testY[1,1..10]);
-    writeln("");
-
-    t.stop();
-    writeln("Training took: ",t.elapsed()," seconds");
-
-
-    writeln("");
-    writeln("testSine... done...");
-    writeln("");
-    writeln("");
-
-  }
-
   proc run() {
     super.run();
-//    testBreath();
-//    testHiddenLayer();
-//    testLinearForward();
-//    testActivationForward();
-//    testStackBuilder();
-//    testForwardPass();
-//    testCostFunction();
-//    testCaches();
-//    testLinearBackward();
-//    testBackProp();
-//    testXOR();
-//    testMiniBatching();
-    testSine();
+    testBreath();
+    testHiddenLayer();
+    testLinearForward();
+    testActivationForward();
+    testStackBuilder();
+    testForwardPass();
+    testCostFunction();
+    testCaches();
+    testLinearBackward();
+    testBackProp();
+    testMiniBatching();
     return 0;
   }
 }

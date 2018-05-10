@@ -21,9 +21,10 @@ module Sine {
       Neural,
       Charcoal;
 
-config const epochs: int = 100000;
+config const numEpochs: int = 100000;
 config const reportInterval: int = 1000;
 config const learningRate: real = 0.01;
+config const momentum: real = 0;
 
 
  proc main() {
@@ -50,18 +51,18 @@ config const learningRate: real = 0.01;
 
 
    var dims = [X.shape[1],3,1],
-       activations = ["tanh","linear"];
+       activations = ["tanh","tanh"];
 
 
    var model = new FCNetwork(dims,activations);
 
-   model.train(X,Y,epochs,learningRate,reportInterval);
+   model.train(X,Y,numEpochs,learningRate,reportInterval);
 
    writeln("\n\n");
 
    var preds = model.forwardPass(testX);
-   writeln("Sine Predictions: ",preds[1,1..10]);
-   writeln("Actual Values:    ",testY[1,1..10]);
+   writeln("Sine Predictions: ",preds[1,1..6]);
+   writeln("Actual Values:    ",testY[1,1..6]);
    writeln("");
 
    t.stop();
