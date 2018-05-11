@@ -234,7 +234,7 @@
 
 /*  Constructs a layer with given activation and weights/bias initialized
          with small random postive numbers                                */
-     proc init(activation: string, udim: int, ldim: int, eps = 0.1) {
+     proc init(activation: string, udim: int, ldim: int, eps = 0.5) {
        this.wDom = {1..udim,1..ldim};
        this.bDom = this.wDom.dim(1);
        var W: [wDom] real;
