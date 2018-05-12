@@ -232,20 +232,31 @@
          b:[bDom] real,
          g: Activation;
 
+
 /*  Constructs a layer with given activation and weights/bias initialized
          with small random postive numbers                                */
-     proc init(activation: string, udim: int, ldim: int, eps = 0.5) {
+     proc init(activation: string, udim: int, ldim: int) {
        this.wDom = {1..udim,1..ldim};
        this.bDom = this.wDom.dim(1);
        var W: [wDom] real;
        var b: [bDom] real;
        this.W = W;
-       this.b = b;
+       this.b = b + 0.0000000000001;
        fillRandom(this.W);
-       fillRandom(this.b);
-       this.W = eps*this.W;
-       this.b = eps*this.b;
        this.g = new Activation(name=activation);
+       if this.g.name == "tanh" {
+         this.W = (this.W - 0.5) * sqrt(6/(W.shape[2] + W.shape[1]));
+       } else if this.g.name == "sigmoid" {
+         this.W = (this.W - 0.5) * sqrt(3.6/W.shape[2]);
+       } else if this.g.name == "linear" {
+         this.W = (this.W - 0.5) * sqrt(1/W.shape[2]);
+       } else if this.g.name == "relu" {
+         this.W = this.W * sqrt(2/W.shape[2]);
+       } else if this.g.name == "linear" {
+         this.W = (this.W - 0.5) * sqrt(2/W.shape[2]);
+       } else {
+         this.W = (this.W - 0.5) * sqrt(1/W.shape[2]);
+       }
      }
 
 /*  Computes an Affine Transformation on A_prev:  Z = W.A_prev + b  */

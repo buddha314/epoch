@@ -47,7 +47,7 @@ config const momentum: real = 0;
    var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
 
    var dims = [X.shape[1],2,1],  // 2d inputs, 2-unit layer, 1d output
-       activations = ["tanh","sigmoid"];
+       activations = ["tanh","linear"];
 
    var testX = Matrix( [0.0, 0.0, 1.0, 1.0],
                        [1.0, 0.0, 1.0, 0.0] );

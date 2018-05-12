@@ -51,7 +51,7 @@ config const momentum: real = 0;
 
 
    var dims = [X.shape[1],3,1],
-       activations = ["tanh","tanh"];
+       activations = ["tanh","linear"];
 
 
    var model = new FCNetwork(dims,activations);
