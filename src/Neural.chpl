@@ -385,12 +385,6 @@
      }
   }
 
-  proc computeCost(Y:[], AL:[]) {
-    var Jp: [AL.domain] real = Y*log(AL) + (1-Y)*log(1-AL);
-    var J: real = -(+ reduce Jp)/AL.domain.dim(2).size;
-    return J;
-  }
-
 
 
 /*  Class for Assigning the Appropiate Loss Function Based on Output Layer  */
