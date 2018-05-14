@@ -58,7 +58,15 @@ config const alphaR: real = 0;
 
    var model = new FCNetwork(dims,activations);
 
-   model.train(X,Y,numEpochs,learningRate,reportInterval);
+   model.train(X = X
+              ,Y = Y
+              ,momentum = momentum
+              ,epochs = numEpochs
+              ,learningRate = learningRate
+              ,reportInterval = reportInterval
+              ,regularization = "L2"
+              ,alpha = alphaR
+               );
 
    writeln("\n\n");
 
