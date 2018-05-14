@@ -77,9 +77,9 @@
      }
 
 /*  UpdateParameters using cached gradients  */
-     proc updateParameters(learningRate = 0.001, caches) {
+     proc updateParameters(learningRate = 0.001, caches, regularizer: Regularization) {
        for l in this.layerDom {
-         this.layers[l].W = this.layers[l].W - learningRate * caches[l].dW;  // dW = V_w if momentum is being used
+         this.layers[l].W = this.layers[l].W - learningRate * (regularizer.Q(this.layers[l].W).plus(caches[l].dW));  // dW = V_w if momentum is being used
          this.layers[l].b = this.layers[l].b - learningRate * caches[l].db;  // db = V_b if momentum is being used
        }
        for l in caches.domain {
@@ -87,18 +87,8 @@
          caches[l] = new Cache();
        }
      }
-/*
-     proc updateParameters(learningRate = 0.001, caches) {
-       for l in this.layerDom {
-         this.layers[l].W = this.layers[l].W - learningRate * caches[l].W_vel;
-         this.layers[l].b = this.layers[l].b - learningRate * caches[l].d_vel;
-       }
-       for l in caches.domain {
-         delete caches[l];
-         caches[l] = new Cache();
-       }
-     }
-*/
+
+
 /*  Full front and back sweep with parameter updates  */
      proc fullSweep(X:[], Y:[], learningRate:real = 0.001) {
        var cacheDom: domain(1) = {1..this.layerDom.size + 1};
@@ -112,8 +102,8 @@
        return (cost, output);
      }
 
-/*  Full Sweep with Momentum  */
-     proc fullSweep(X:[], Y:[], learningRate:real = 0.001, momentum: real, velCaches: [] Cache) {
+/*  Full Sweep with Momentum and Regularization */
+     proc fullSweep(X:[], Y:[], learningRate:real = 0.001, momentum: real, velCaches: [] Cache, regularizer: Regularization) {
        var cacheDom: domain(1) = {1..this.layerDom.size + 1};
        var caches: [cacheDom] Cache;
        for l in cacheDom do caches[l] = new Cache();
@@ -126,12 +116,28 @@
          velCaches[l].W_vel = caches[l].dW;
          velCaches[l].b_vel = caches[l].db;
        }
-       this.updateParameters(learningRate, caches);
+       this.updateParameters(learningRate, caches, regularizer);
        delete caches;
        return (cost, output);
      }
 
-/*  Regular Gradient Descent Training  */
+/*  */
+     proc train_(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+       for i in 1..epochs {
+         var (cost, output) = this.fullSweep(X,Y,learningRate);/*
+         if i % reportInterval == 0 || i == 1 {
+           try! writeln("epoch: ",i,",  cost: ",cost,";     ");
+         }*/
+       }
+       this.trained = true;
+       const preds = this.forwardPass(X);
+       const fcost = this.loss.J(Y, preds);
+  //     writeln("");
+  //     writeln("Training Done... Final Cost: ",fcost);
+     }
+
+
+/*  Regular Gradient Descent Training
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate);
@@ -144,10 +150,18 @@
        const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
-     }
+     }*/
 
-/*  Gradient Descent with Momentum  */
-     proc train(X:[], Y:[], momentum: real, epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+/*  Gradient Descent with Momentum and L2/L1 Regularization  */
+     proc train(X:[],
+                Y:[],
+                momentum: real = 0,
+                epochs = 100000,
+                learningRate = 0.001,
+                reportInterval = 1000,
+                regularization: string = "NONE",
+                alpha:real = 0) {
+       var regularizer = new Regularization(regularization, alpha);
        var velCaches: [this.layerDom] Cache;
        for l in this.layerDom {
           velCaches[l] = new Cache();
@@ -155,7 +169,7 @@
           velCaches[l].bDom = this.layers[l].bDom;
        }
        for i in 1..epochs {
-         var (cost, output) = this.fullSweep(X,Y,learningRate, momentum: real, velCaches);
+         var (cost, output) = this.fullSweep(X,Y,learningRate, momentum: real, velCaches, regularizer);
          if i % reportInterval == 0 || i == 1 {
            try! writeln("epoch: ",i,",  cost: ",cost,";     ");
          }
@@ -168,7 +182,7 @@
      }
 
 /*  Minibatch Gradient Descent Training  */
-     proc train(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
+     proc trainMB(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
        var batches = 1 + X.shape[2]/batchsize: int;
        for i in 1..epochs {
          for batch in {1..batches} {
@@ -227,20 +241,31 @@
          b:[bDom] real,
          g: Activation;
 
+
 /*  Constructs a layer with given activation and weights/bias initialized
          with small random postive numbers                                */
-     proc init(activation: string, udim: int, ldim: int, eps = 0.1) {
+     proc init(activation: string, udim: int, ldim: int) {
        this.wDom = {1..udim,1..ldim};
        this.bDom = this.wDom.dim(1);
        var W: [wDom] real;
        var b: [bDom] real;
        this.W = W;
-       this.b = b;
+       this.b = b + 0.0000000000001;
        fillRandom(this.W);
-       fillRandom(this.b);
-       this.W = eps*this.W;
-       this.b = eps*this.b;
        this.g = new Activation(name=activation);
+       if this.g.name == "tanh" {
+         this.W = (this.W - 0.5) * sqrt(6/(W.shape[2] + W.shape[1]));
+       } else if this.g.name == "sigmoid" {
+         this.W = (this.W - 0.5) * sqrt(3.6/W.shape[2]);
+       } else if this.g.name == "linear" {
+         this.W = (this.W - 0.5) * sqrt(1/W.shape[2]);
+       } else if this.g.name == "relu" {
+         this.W = this.W * sqrt(2/W.shape[2]);
+       } else if this.g.name == "linear" {
+         this.W = (this.W - 0.5) * sqrt(2/W.shape[2]);
+       } else {
+         this.W = (this.W - 0.5) * sqrt(1/W.shape[2]);
+       }
      }
 
 /*  Computes an Affine Transformation on A_prev:  Z = W.A_prev + b  */
@@ -369,12 +394,32 @@
      }
   }
 
-  proc computeCost(Y:[], AL:[]) {
-    var Jp: [AL.domain] real = Y*log(AL) + (1-Y)*log(1-AL);
-    var J: real = -(+ reduce Jp)/AL.domain.dim(2).size;
-    return J;
-  }
+/*  A class for defined various types of regularization terms  */
+  class Regularization {
+    var name: string,
+        alpha: real;
+    proc init(name: string) {
+      this.name = name;
+    }
 
+    proc init(name: string, alpha: real) {
+      this.name = name;
+      this.alpha = alpha;
+    }
+
+    proc Q(W:[]) {
+      if this.name == "L2" {
+        var R: [W.domain] real = this.alpha * W;
+        return R;
+      } else if this.name == "L1" {
+        var R: [W.domain] real = this.alpha * sgn(W);
+        return R;
+      } else {
+        var R: [W.domain] real = 0 * W;
+        return R;
+      }
+    }
+  }
 
 
 /*  Class for Assigning the Appropiate Loss Function Based on Output Layer  */

@@ -24,9 +24,11 @@ module XOR {
       Neural,
       Charcoal;
 
-config const epochs: int = 100000;
+config const numEpochs: int = 100000;
 config const reportInterval: int = 1000;
 config const learningRate: real = 0.01;
+config const momentum: real = 0;
+config const alphaR: real = 0;
 
 
  proc main() {
@@ -40,28 +42,40 @@ config const learningRate: real = 0.01;
 
 
 
-   var X = [[0.0, 0.0, 1.0, 1.0],
-            [0.0, 1.0, 0.0, 1.0]];
+   var X = Matrix( [0.0, 0.0, 1.0, 1.0],
+                   [0.0, 1.0, 0.0, 1.0] );
 
-   var Y = [0.0, 1.0, 1.0, 0.0];
+   var Y = Matrix( [0.0, 1.0, 1.0, 0.0] );
 
    var dims = [X.shape[1],2,1],  // 2d inputs, 2-unit layer, 1d output
        activations = ["tanh","linear"];
 
-   var testX = [[0.0, 0.0, 1.0, 1.0],
-                [1.0, 0.0, 1.0, 0.0]];
+   var testX = Matrix( [0.0, 0.0, 1.0, 1.0],
+                       [1.0, 0.0, 1.0, 0.0] );
 
-   var testY = [1.0, 0.0, 0.0, 1.0];
+   var testY = Matrix( [1.0, 0.0, 0.0, 1.0] );
 
 
    var model = new FCNetwork(dims,activations);
 
-   model.train(X,Y,epochs,learningRate,reportInterval);
+   model.train(X = X
+              ,Y = Y
+              ,momentum = momentum
+              ,epochs = numEpochs
+              ,learningRate = learningRate
+              ,reportInterval = reportInterval
+              ,regularization = "L2"
+              ,alpha = alphaR
+               );
 
    writeln("\n\n");
 
-   var preds = model.forwardPass(testData);
-   writeln("XOR Predictions: ",preds);
+   var trainingPreds = model.forwardPass(X);
+   var testPreds = model.forwardPass(testX);
+   writeln("XOR Training Predictions: ",trainingPreds);
+   writeln("Actual Training Values: ",Y,"\n");
+   writeln("XOR Test Predictions: ",testPreds);
+   writeln("Actual Test Values:   ",testY);
    writeln("");
 
    t.stop();

@@ -9,7 +9,7 @@
 
 
 
-module Sine {
+module Polynomial {
 
   use NumSuch,
       Norm,
@@ -31,7 +31,7 @@ config const alphaR: real = 0;
  proc main() {
    writeln("");
    writeln("");
-   writeln("Sine... starting...");
+   writeln("Polynomial... starting...");
    writeln("");
 
    var t: Timer;
@@ -42,13 +42,13 @@ config const alphaR: real = 0;
    var X,Z: [dom] real;
    fillRandom(X);
    fillRandom(Z);
-   X = 2*pi*X;
-   Z = 2*pi*Z;
+   X = 5*(X-0.5);
+   Z = 5*(Z-0.5);
    X = Matrix(X);
    Z = Matrix(Z);
-   var Y: X.type = sin(X);
+   var Y: X.type = X**2-3*X+2;
    var testX: Z.type = Z;
-   var testY: Z.type = sin(testX);
+   var testY: Z.type = X**2-3*X+2;
 
 
    var dims = [X.shape[1],3,1],
@@ -70,9 +70,9 @@ config const alphaR: real = 0;
    writeln("\n\n");
 
    var preds = model.forwardPass(testX);
-   writeln("Sine Test Cost: ",model.loss.J(testY,preds));
-   writeln("Sine Predictions: ",preds[1,1..6]);
-   writeln("Actual Values:    ",testY[1,1..6]);
+   writeln("Polynomial Test Cost: ",model.loss.J(testY,preds));
+   writeln("Polynomial Predictions: ",preds[1,1..6]);
+   writeln("Actual Values:          ",testY[1,1..6]);
    writeln("");
 
    t.stop();
@@ -80,7 +80,7 @@ config const alphaR: real = 0;
 
 
    writeln("");
-   writeln("Sine... done...");
+   writeln("Polynomial... done...");
    writeln("");
    writeln("");
  }
