@@ -9,7 +9,7 @@
 
 
 
-module Sine {
+module Polynomial {
 
   use NumSuch,
       Norm,
@@ -30,39 +30,40 @@ config const momentum: real = 0;
  proc main() {
    writeln("");
    writeln("");
-   writeln("Sine... starting...");
+   writeln("Polynomial... starting...");
    writeln("");
 
    var t: Timer;
    t.start();
 
 
-   var dom: domain(2) = {1..1,1..1000};
+   var dom: domain(2) = {1..1,1..300};
    var X,Z: [dom] real;
    fillRandom(X);
    fillRandom(Z);
-   X = 2*pi*X;
-   Z = 2*pi*Z;
+   X = 7*(X-0.5);
+   Z = 5*(Z-0.5);
    X = Matrix(X);
    Z = Matrix(Z);
-   var Y: X.type = sin(X);
+   var Y: X.type = X**2-3*X+2;
    var testX: Z.type = Z;
-   var testY: Z.type = sin(testX);
+   var testY: Z.type = X**2-3*X+2;
 
 
-   var dims = [X.shape[1],3,1],
-       activations = ["tanh","linear"];
+   var dims = [X.shape[1],5,3,2,1],
+       activations = ["tanh","tanh","tanh","linear"];
 
 
    var model = new FCNetwork(dims,activations);
 
-   model.train(X,Y,numEpochs,learningRate,reportInterval);
+   model.train(X,Y,momentum,numEpochs,learningRate,reportInterval);
 
    writeln("\n\n");
 
    var preds = model.forwardPass(testX);
-   writeln("Sine Predictions: ",preds[1,1..6]);
-   writeln("Actual Values:    ",testY[1,1..6]);
+   writeln("Polynomial Test Cost: ",model.loss.J(testY,preds));
+   writeln("Polynomial Predictions: ",preds[1,1..6]);
+   writeln("Actual Values:          ",testY[1,1..6]);
    writeln("");
 
    t.stop();
@@ -70,7 +71,7 @@ config const momentum: real = 0;
 
 
    writeln("");
-   writeln("Sine... done...");
+   writeln("Polynomial... done...");
    writeln("");
    writeln("");
  }

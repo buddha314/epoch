@@ -9,7 +9,7 @@ MODULES=-M$(CDO_HOME)/src -M$(NUMSUCH_HOME)/src -M$(CHARCOAL_HOME)/src -M$(CHING
 EXEC=epoch
 DB_CREDS=../db_creds.txt
 APPROX_DIR=approximators
-default: xor sine
+default: linear poly xor sine
 
 xor: $(APPROX_DIR)/XOR.chpl
 	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
@@ -19,4 +19,14 @@ xor: $(APPROX_DIR)/XOR.chpl
 sine: $(APPROX_DIR)/Sine.chpl
 	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
 	./$(APPROX_DIR)/example -f sine.cfg;  \
+	rm $(APPROX_DIR)/example
+
+linear: $(APPROX_DIR)/Linear.chpl
+	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
+	./$(APPROX_DIR)/example -f linear.cfg;  \
+	rm $(APPROX_DIR)/example
+
+poly: $(APPROX_DIR)/Polynomial.chpl
+	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
+	./$(APPROX_DIR)/example -f poly.cfg;  \
 	rm $(APPROX_DIR)/example

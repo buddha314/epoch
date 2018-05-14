@@ -30,28 +30,28 @@ config const momentum: real = 0;
  proc main() {
    writeln("");
    writeln("");
-   writeln("Sine... starting...");
+   writeln("Linear... starting...");
    writeln("");
 
    var t: Timer;
    t.start();
 
 
-   var dom: domain(2) = {1..1,1..1000};
+   var dom: domain(2) = {1..1,1..100};
    var X,Z: [dom] real;
    fillRandom(X);
    fillRandom(Z);
-   X = 2*pi*X;
-   Z = 2*pi*Z;
+   X = 4*X;
+   Z = 1000*Z;
    X = Matrix(X);
    Z = Matrix(Z);
-   var Y: X.type = sin(X);
+   var Y: X.type = 0.5*X+2;
    var testX: Z.type = Z;
-   var testY: Z.type = sin(testX);
+   var testY: Z.type = 0.5*testX+2;
 
 
-   var dims = [X.shape[1],3,1],
-       activations = ["tanh","linear"];
+   var dims = [X.shape[1],1],
+       activations = ["linear"];
 
 
    var model = new FCNetwork(dims,activations);
@@ -61,16 +61,17 @@ config const momentum: real = 0;
    writeln("\n\n");
 
    var preds = model.forwardPass(testX);
-   writeln("Sine Predictions: ",preds[1,1..6]);
+   writeln("Line Predictions: ",preds[1,1..6]);
    writeln("Actual Values:    ",testY[1,1..6]);
    writeln("");
+   writeln("The equation of the line is y=",model.layers[1].W,"x+",model.layers[1].b);
 
    t.stop();
    writeln("Training took: ",t.elapsed()," seconds");
 
 
    writeln("");
-   writeln("Sine... done...");
+   writeln("Linear... done...");
    writeln("");
    writeln("");
  }
