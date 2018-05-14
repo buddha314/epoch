@@ -37,11 +37,11 @@ config const momentum: real = 0;
    t.start();
 
 
-   var dom: domain(2) = {1..1,1..300};
+   var dom: domain(2) = {1..1,1..1000};
    var X,Z: [dom] real;
    fillRandom(X);
    fillRandom(Z);
-   X = 7*(X-0.5);
+   X = 5*(X-0.5);
    Z = 5*(Z-0.5);
    X = Matrix(X);
    Z = Matrix(Z);
@@ -50,8 +50,8 @@ config const momentum: real = 0;
    var testY: Z.type = X**2-3*X+2;
 
 
-   var dims = [X.shape[1],5,3,2,1],
-       activations = ["tanh","tanh","tanh","linear"];
+   var dims = [X.shape[1],3,1],
+       activations = ["tanh","linear"];
 
 
    var model = new FCNetwork(dims,activations);

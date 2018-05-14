@@ -347,6 +347,14 @@
        return (exp(x) - exp(-x))/(exp(x) + exp(-x));
      }
 
+     proc sinh(x:real) {
+       return exp(x) - exp(-x);
+     }
+
+     proc cosh(x:real) {
+       return exp(x) + exp(-x);
+     }
+
      proc heaviside(x) {
        if x < 0 {
          return 0;
@@ -372,6 +380,10 @@
        return 1 - (tanh(x))**2;
      }
 
+     proc dsinh(x) {
+       return cosh(x);
+     }
+
      proc dheaviside(x) {
        if x == 0 {
          return 10000000000000000;
@@ -385,6 +397,10 @@
      }
   }
 
+/*  A class for defined various types of regularization terms  */
+  class Regularization {
+
+  }
 
 
 /*  Class for Assigning the Appropiate Loss Function Based on Output Layer  */
