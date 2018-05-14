@@ -25,6 +25,7 @@ config const numEpochs: int = 100000;
 config const reportInterval: int = 1000;
 config const learningRate: real = 0.01;
 config const momentum: real = 0;
+config const alphaR: real = 0;
 
 
  proc main() {
@@ -37,7 +38,7 @@ config const momentum: real = 0;
    t.start();
 
 
-   var dom: domain(2) = {1..1,1..1000};
+   var dom: domain(2) = {1..1,1..100};
    var X,Z: [dom] real;
    fillRandom(X);
    fillRandom(Z);
@@ -56,7 +57,15 @@ config const momentum: real = 0;
 
    var model = new FCNetwork(dims,activations);
 
-   model.train(X,Y,momentum,numEpochs,learningRate,reportInterval);
+   model.train(X = X
+              ,Y = Y
+              ,momentum = momentum
+              ,epochs = numEpochs
+              ,learningRate = learningRate
+              ,reportInterval = reportInterval
+              ,regularization = "L2"
+              ,alpha = alphaR
+               );
 
    writeln("\n\n");
 

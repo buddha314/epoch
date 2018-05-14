@@ -25,6 +25,7 @@ config const numEpochs: int = 100000;
 config const reportInterval: int = 1000;
 config const learningRate: real = 0.01;
 config const momentum: real = 0;
+config const alphaR: real = 0;
 
 
  proc main() {
@@ -56,11 +57,20 @@ config const momentum: real = 0;
 
    var model = new FCNetwork(dims,activations);
 
-   model.train(X,Y,numEpochs,learningRate,reportInterval);
+   model.train(X = X
+              ,Y = Y
+              ,momentum = momentum
+              ,epochs = numEpochs
+              ,learningRate = learningRate
+              ,reportInterval = reportInterval
+              ,regularization = "L2"
+              ,alpha = alphaR
+               );
 
    writeln("\n\n");
 
    var preds = model.forwardPass(testX);
+   writeln("Line Test Cost: ",model.loss.J(testY,preds));
    writeln("Line Predictions: ",preds[1,1..6]);
    writeln("Actual Values:    ",testY[1,1..6]);
    writeln("");
