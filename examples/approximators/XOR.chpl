@@ -28,6 +28,7 @@ config const numEpochs: int = 100000;
 config const reportInterval: int = 1000;
 config const learningRate: real = 0.01;
 config const momentum: real = 0;
+config const alphaR: real = 0;
 
 
  proc main() {
