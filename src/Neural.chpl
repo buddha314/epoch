@@ -77,9 +77,9 @@
      }
 
 /*  UpdateParameters using cached gradients  */
-     proc updateParameters(learningRate = 0.001, caches) {
+     proc updateParameters(learningRate = 0.001, caches, regularizer: Regularization) {
        for l in this.layerDom {
-         this.layers[l].W = this.layers[l].W - learningRate * caches[l].dW;  // dW = V_w if momentum is being used
+         this.layers[l].W = this.layers[l].W - learningRate * (regularizer.Q(this.layers[l].W).plus(caches[l].dW));  // dW = V_w if momentum is being used
          this.layers[l].b = this.layers[l].b - learningRate * caches[l].db;  // db = V_b if momentum is being used
        }
        for l in caches.domain {
@@ -102,8 +102,8 @@
        return (cost, output);
      }
 
-/*  Full Sweep with Momentum  */
-     proc fullSweep(X:[], Y:[], learningRate:real = 0.001, momentum: real, velCaches: [] Cache) {
+/*  Full Sweep with Momentum and Regularization */
+     proc fullSweep(X:[], Y:[], learningRate:real = 0.001, momentum: real, velCaches: [] Cache, regularizer: Regularization) {
        var cacheDom: domain(1) = {1..this.layerDom.size + 1};
        var caches: [cacheDom] Cache;
        for l in cacheDom do caches[l] = new Cache();
@@ -116,11 +116,12 @@
          velCaches[l].W_vel = caches[l].dW;
          velCaches[l].b_vel = caches[l].db;
        }
-       this.updateParameters(learningRate, caches);
+       this.updateParameters(learningRate, caches, regularizer);
        delete caches;
        return (cost, output);
      }
 
+/*  */
      proc train_(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate);/*
@@ -136,7 +137,7 @@
      }
 
 
-/*  Regular Gradient Descent Training  */
+/*  Regular Gradient Descent Training
      proc train(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate);
@@ -149,10 +150,18 @@
        const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
-     }
+     }*/
 
-/*  Gradient Descent with Momentum  */
-     proc train(X:[], Y:[], momentum: real, epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
+/*  Gradient Descent with Momentum and L2/L1 Regularization  */
+     proc train(X:[],
+                Y:[],
+                momentum: real = 0,
+                epochs = 100000,
+                learningRate = 0.001,
+                reportInterval = 1000,
+                regularization: string = "NONE",
+                alpha:real = 0) {
+       var regularizer = new Regularization(regularization, alpha);
        var velCaches: [this.layerDom] Cache;
        for l in this.layerDom {
           velCaches[l] = new Cache();
@@ -160,7 +169,7 @@
           velCaches[l].bDom = this.layers[l].bDom;
        }
        for i in 1..epochs {
-         var (cost, output) = this.fullSweep(X,Y,learningRate, momentum: real, velCaches);
+         var (cost, output) = this.fullSweep(X,Y,learningRate, momentum: real, velCaches, regularizer);
          if i % reportInterval == 0 || i == 1 {
            try! writeln("epoch: ",i,",  cost: ",cost,";     ");
          }
@@ -173,7 +182,7 @@
      }
 
 /*  Minibatch Gradient Descent Training  */
-     proc train(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
+     proc trainMB(X:[], Y:[], epochs: int = 100000, learningRate: real = 0.001, reportInterval: int = 1000, batchsize: int) {
        var batches = 1 + X.shape[2]/batchsize: int;
        for i in 1..epochs {
          for batch in {1..batches} {
@@ -347,14 +356,6 @@
        return (exp(x) - exp(-x))/(exp(x) + exp(-x));
      }
 
-     proc sinh(x:real) {
-       return exp(x) - exp(-x);
-     }
-
-     proc cosh(x:real) {
-       return exp(x) + exp(-x);
-     }
-
      proc heaviside(x) {
        if x < 0 {
          return 0;
@@ -380,10 +381,6 @@
        return 1 - (tanh(x))**2;
      }
 
-     proc dsinh(x) {
-       return cosh(x);
-     }
-
      proc dheaviside(x) {
        if x == 0 {
          return 10000000000000000;
@@ -399,7 +396,29 @@
 
 /*  A class for defined various types of regularization terms  */
   class Regularization {
+    var name: string,
+        alpha: real;
+    proc init(name: string) {
+      this.name = name;
+    }
 
+    proc init(name: string, alpha: real) {
+      this.name = name;
+      this.alpha = alpha;
+    }
+
+    proc Q(W:[]) {
+      if this.name == "L2" {
+        var R: [W.domain] real = this.alpha * W;
+        return R;
+      } else if this.name == "L1" {
+        var R: [W.domain] real = this.alpha * sgn(W);
+        return R;
+      } else {
+        var R: [W.domain] real = 0 * W;
+        return R;
+      }
+    }
   }
 
 
