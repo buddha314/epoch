@@ -26,6 +26,11 @@ linear: $(APPROX_DIR)/Linear.chpl
 	./$(APPROX_DIR)/example -f linear.cfg;  \
 	rm $(APPROX_DIR)/example
 
+binon: $(APPROX_DIR)/BiNon.chpl
+	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
+	./$(APPROX_DIR)/example -f binon.cfg;  \
+	rm $(APPROX_DIR)/example
+
 poly: $(APPROX_DIR)/Polynomial.chpl
 	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
 	./$(APPROX_DIR)/example -f poly.cfg;  \
