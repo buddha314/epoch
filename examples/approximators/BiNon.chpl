@@ -85,15 +85,15 @@ config const alphaR: real = 0;
               ,regularization = "L2"
               ,alpha = alphaR
                );
-
+   writeln("\n\n  Weights: \n",model.layers[1].W);
    writeln("\n\n");
 
    var trainingPreds = model.forwardPass(trainX);
    var testPreds = model.forwardPass(testX);
    writeln("BiNon Training Predictions: ",trainingPreds);
-   writeln("Actual Training Values: ",Y,"\n");
+   writeln("Actual Training Values:     ",Y,"\n");
    writeln("BiNon Test Predictions: ",testPreds);
-   writeln("Actual Test Values:   ",testY);
+   writeln("Actual Test Values:     ",testY);
    writeln("");
 
    t.stop();
