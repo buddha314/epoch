@@ -21,6 +21,8 @@
          activations: [layerDom] string,
          trained: bool = false;
 
+     proc init() {}
+      
      proc init(dims: [] int, activations: [] string) {
        this.layerDom = {1..dims.size - 1};
        var layers: [layerDom] Layer;
