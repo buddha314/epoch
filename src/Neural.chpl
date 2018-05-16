@@ -13,7 +13,7 @@
 
 
 /*  A Fully Connected (FC) Neural Network is a stack of Layers  */
-   class FCNetwork {
+   class FCNetwork { // : Model
      var layerDom = {1..0},
          layers: [layerDom] Layer,
          widths: [layerDom] int,
@@ -32,7 +32,7 @@
      }
 
 /*  Sends input data through a forwardPass of the Neural Network  */
-     proc forwardPass(X:[]) {
+     proc forwardPass(X:[]) {  // this will be predict method of the neural network
        var Adom = X.domain;
        var A: [Adom] real = X;
        for l in this.layerDom {
@@ -97,7 +97,7 @@
        const output = this.forwardPass(X, caches);
        const cost = this.loss.J(Y, output);
        this.backwardPass(output, Y, caches);
-       this.updateParameters(learningRate, caches);
+       this.updateParameters(learningRate, caches, regularizer = new Regularization());
        delete caches;
        return (cost, output);
      }
@@ -121,19 +121,14 @@
        return (cost, output);
      }
 
-/*  */
+/*  Training with Suppressed Output  */
      proc train_(X:[], Y:[], epochs = 100000, learningRate = 0.001, reportInterval = 1000) {
        for i in 1..epochs {
-         var (cost, output) = this.fullSweep(X,Y,learningRate);/*
-         if i % reportInterval == 0 || i == 1 {
-           try! writeln("epoch: ",i,",  cost: ",cost,";     ");
-         }*/
+         var (cost, output) = this.fullSweep(X,Y,learningRate);
        }
        this.trained = true;
        const preds = this.forwardPass(X);
        const fcost = this.loss.J(Y, preds);
-  //     writeln("");
-  //     writeln("Training Done... Final Cost: ",fcost);
      }
 
 
@@ -152,7 +147,7 @@
        writeln("Training Done... Final Cost: ",fcost);
      }*/
 
-/*  Gradient Descent with Momentum and L2/L1 Regularization  */
+/*  Gradient Descent with Momentum and L2/L1 Regularization Options  */
      proc train(X:[],
                 Y:[],
                 momentum: real = 0,
@@ -199,7 +194,6 @@
        }
        this.trained = true;
        const preds = this.forwardPass(X);
-       //const fcost = computeCost(Y, preds);
        const fcost = this.loss.J(Y, preds);
        writeln("");
        writeln("Training Done... Final Cost: ",fcost);
@@ -398,6 +392,11 @@
   class Regularization {
     var name: string,
         alpha: real;
+    proc init() {
+      this.name = "NONE";
+      this.alpha = 0;
+    }
+
     proc init(name: string) {
       this.name = name;
     }
