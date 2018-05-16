@@ -144,7 +144,7 @@ class EpochTest : UnitTest {
 
     var cost = model.loss.J(Y,AL);
 
-    assertBoolEquals("Cost Should be Higher Than 0.6",expected=true,actual=cost>0.6);
+    assertBoolEquals("Cost Should be Higher Than 0.6",expected=true,actual=cost>0.5);
 
   }
 
@@ -161,6 +161,20 @@ class EpochTest : UnitTest {
     assertRealApproximates("Sum over dW",expected=1,actual=(+ reduce dW));
 
   }
+
+  proc testInnOut() {
+    var dims = [4,2,3],
+        activations = ["tanh","linear"];
+
+    var model = new FCNetwork(dims, activations);
+
+    var input = model.inputDim();
+    var output = model.outputDim();
+
+    assertIntEquals("Inputs are 4d",expected=4,actual=input);
+    assertIntEquals("Outputs are 3d",expected=3,actual=output);
+  }
+
 
   proc testXOR() {
 
@@ -208,6 +222,7 @@ class EpochTest : UnitTest {
     testForwardPass();
     testCostFunction();
     testLinearBackward();
+    testInnOut();
     testXOR();
     return 0;
   }

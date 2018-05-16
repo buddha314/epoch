@@ -16,7 +16,7 @@
    class FCNetwork { // : Model
      var layerDom = {1..0},
          layers: [layerDom] Layer,
-         widths: [layerDom] int,
+         widths: [1..layerDom.size+1] int,
          loss: Loss,
          activations: [layerDom] string,
          trained: bool = false;
@@ -28,7 +28,16 @@
        for l in layerDom {
          this.layers[l] = new Layer(activation = activations[l], udim = dims[l+1], ldim = dims[l]);
        }
+       this.widths = dims;
        this.loss = new Loss(name = activations[this.layerDom.last]);
+     }
+
+     proc inputDim() {
+       return this.widths[widths.domain.first];
+     }
+
+     proc outputDim() {
+       return this.widths[widths.domain.last];
      }
 
 /*  Sends input data through a forwardPass of the Neural Network  */
