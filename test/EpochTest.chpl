@@ -142,7 +142,7 @@ class EpochTest : UnitTest {
 
     var AL = model.forwardPass(X);
 
-    var cost = computeCost(Y,AL);
+    var cost = model.loss.J(Y,AL);
 
     assertBoolEquals("Cost Should be Higher Than 0.6",expected=true,actual=cost>0.6);
 

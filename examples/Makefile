@@ -9,7 +9,8 @@ MODULES=-M$(CDO_HOME)/src -M$(NUMSUCH_HOME)/src -M$(CHARCOAL_HOME)/src -M$(CHING
 EXEC=epoch
 DB_CREDS=../db_creds.txt
 APPROX_DIR=approximators
-default: linear poly xor sine
+CLASSY_DIR=classifiers
+default: linear poly sine xor binon detect3
 
 xor: $(APPROX_DIR)/XOR.chpl
 	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
@@ -25,6 +26,16 @@ linear: $(APPROX_DIR)/Linear.chpl
 	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
 	./$(APPROX_DIR)/example -f linear.cfg;  \
 	rm $(APPROX_DIR)/example
+
+binon: $(APPROX_DIR)/BiNon.chpl
+	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
+	./$(APPROX_DIR)/example -f binon.cfg;  \
+	rm $(APPROX_DIR)/example
+
+detect3: $(CLASSY_DIR)/Detect3.chpl
+	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(CLASSY_DIR)/example $<; \
+	./$(CLASSY_DIR)/example -f detect3.cfg;  \
+	rm $(CLASSY_DIR)/example
 
 poly: $(APPROX_DIR)/Polynomial.chpl
 	$(CC) -M$(SRCDIR) $(MODULES) $(FLAGS) ${INCLUDES} ${LIBS} -o $(APPROX_DIR)/example $<; \
