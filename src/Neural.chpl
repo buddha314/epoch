@@ -176,7 +176,7 @@
        }
        for i in 1..epochs {
          var (cost, output) = this.fullSweep(X,Y,learningRate, momentum: real, velCaches, regularizer);
-         if i % reportInterval == 0 || i == 1 {
+         if ( i % reportInterval == 0 || i == 1 ) && reportInterval < epochs {
            try! writeln("epoch: ",i,",  cost: ",cost,";     ");
          }
        }

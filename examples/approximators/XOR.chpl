@@ -50,10 +50,10 @@ config const alphaR: real = 0;
    var dims = [X.shape[1],2,1],  // 2d inputs, 2-unit layer, 1d output
        activations = ["tanh","linear"];
 
-   var testX = Matrix( [0.0, 0.0, 1.0, 1.0],
-                       [1.0, 0.0, 1.0, 0.0] );
+   var testX = Matrix( [0.0],
+                       [1.0] );
 
-   var testY = Matrix( [1.0, 0.0, 0.0, 1.0] );
+   var testY = Matrix( [1.0] );
 
 
    var model = new FCNetwork(dims,activations);
