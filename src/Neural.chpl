@@ -7,13 +7,13 @@
        Time,
        Norm,
        Math,
-  //     Model,
+       Model,
        Random;
 
 
 
 /*  A Fully Connected (FC) Neural Network is a stack of Layers  */
-   class FCNetwork { // : Model
+   class FCNetwork: Model {
      var layerDom = {1..0},
          layers: [layerDom] Layer,
          widths: [1..layerDom.size+1] int,
@@ -21,8 +21,8 @@
          activations: [layerDom] string,
          trained: bool = false;
 
-     proc init() {}
-      
+     proc init() { }
+
      proc init(dims: [] int, activations: [] string) {
        this.layerDom = {1..dims.size - 1};
        var layers: [layerDom] Layer;

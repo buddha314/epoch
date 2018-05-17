@@ -127,6 +127,26 @@ class EpochTest : UnitTest {
 
   }
 
+
+  proc testPredict() {
+
+
+    var dims = [3,4,2,3,1],
+        activations = ["sigmoid","sigmoid","sigmoid","sigmoid"];
+
+    var X = Matrix( [100000.0,0.0,10.0,0.0], [10000.0,0.0,10.0,0.0], [1000.0,0.0,10.0,0.0] );
+
+    var model = new FCNetwork(dims, activations);
+
+    model.trained = true;
+
+    var output = model.predict(X);
+    assertIntEquals("Single Node Output Expected", expected=1, actual=output.shape(1));
+
+
+  }
+
+
   proc testCostFunction() {
 
 
@@ -220,6 +240,7 @@ class EpochTest : UnitTest {
     testActivationForward();
     testStackBuilder();
     testForwardPass();
+    testPredict();
     testCostFunction();
     testLinearBackward();
     testInnOut();
