@@ -212,7 +212,7 @@ class EpochTest : UnitTest {
     var dims = [X.shape[1],2,1],  // 2d inputs, 2-unit layer, 1d output
         activations = ["tanh","linear"],
         numEpochs = 100000,
-        reportInterval = 1000,
+        reportInterval = 100000,
         learningRate = 0.01;
 
     var testX = Matrix( [0.0, 0.0, 1.0, 1.0],
@@ -223,7 +223,15 @@ class EpochTest : UnitTest {
 
     var model = new FCNetwork(dims,activations);
 
-    model.train_(X,Y,numEpochs,learningRate,reportInterval);
+    model.train(X = X
+               ,Y = Y
+               ,momentum = 0
+               ,epochs = numEpochs
+               ,learningRate = learningRate
+               ,reportInterval = reportInterval
+               ,regularization = "L2"
+               ,alpha = 0
+                );
 
     var preds = model.forwardPass(testX);
 
