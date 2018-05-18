@@ -27,14 +27,14 @@ module Model {
 
     proc inputDim() {
       if this: FCNetwork then
-        return (this:FCNetwork).widths[widths.domain.first];
+        return (this:FCNetwork).widths[(this:FCNetwork).widths.domain.first];
       else
         halt("I don't know this model type");
     }
 
     proc outputDim() {
       if this: FCNetwork then
-        return (this:FCNetwork).widths[widths.domain.last];
+        return (this:FCNetwork).widths[(this:FCNetwork).widths.domain.last];
       else
         halt("I don't know this model type");
     }
