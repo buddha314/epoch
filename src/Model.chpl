@@ -24,6 +24,20 @@ module Model {
       else
         halt("I don't know this model type");
     }
+
+    proc inputDim() {
+      if this: FCNetwork then
+        return (this:FCNetwork).widths[widths.domain.first];
+      else
+        halt("I don't know this model type");
+    }
+
+    proc outputDim() {
+      if this: FCNetwork then
+        return (this:FCNetwork).widths[widths.domain.last];
+      else
+        halt("I don't know this model type");
+    }
   }
 
 /*

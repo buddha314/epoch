@@ -34,6 +34,8 @@
        this.loss = new Loss(name = activations[this.layerDom.last]);
      }
 
+     
+/*   DEPRECATED
      proc inputDim() {
        return this.widths[widths.domain.first];
      }
@@ -41,6 +43,7 @@
      proc outputDim() {
        return this.widths[widths.domain.last];
      }
+*/
 
 /*  Sends input data through a forwardPass of the Neural Network  */
      proc forwardPass(X:[]) {  // this will be predict method of the neural network
@@ -171,7 +174,7 @@
                   reportInterval: int = 1000,
                   regularization: string = "NONE",
                   alpha: real = 0,
-                  batchsize: int
+                  batchsize: int = X.shape[2]
                  ) {
        if batchsize >= X.shape[2] {
          this.train(X, Y, momentum, epochs, learningRate, reportInterval, regularization, alpha);
