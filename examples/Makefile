@@ -1,5 +1,5 @@
 include ../local.mk
-CC=chpl
+CC=chpl --fast
 INCLUDES=-I$(BLAS_HOME)/include -I$(POSTGRES_HOME)
 LIBS=-L${BLAS_HOME}/lib -lblas
 SRCDIR=../src
